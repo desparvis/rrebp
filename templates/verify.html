@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Broker{% endblock %}
+
+{% block content %}
+<div class="verify-container">
+    <div class="verify-card">
+        <div class="verify-header">
+            <h2>Verify Broker Credentials</h2>
+            <p>Enter a broker's certification code to  verify their professional status.</p>
+        </div>
+        
+        <!-- Form for submitting the certification code -->
+        <form action="/verify" method="POST" class="verify-form">
+            <div class="form-group">
+                <label for="certification_string">Certification Code</label>
+                <input type="text" id="certification_string" name="certification_string" placeholder="eg. RWAREB-2026-x1fB3e..." required>
+            </div>
+            <button type="submit" class="btn-primary btn-block">Verify</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

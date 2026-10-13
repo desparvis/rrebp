@@ -3,9 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% ednblock %}</title>
+    <title>{% block title %}{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS linking -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
+
 </head>
 <body>
-    {% block content %}{% endblock %}
+    
+    <header>
+        <nav>
+            <a href="/" class="logo">RREBP</a>
+            
+            <div class="nav-menu">
+                <div class="nav-links">
+                    <a href="/">Home</a>
+                    <a href="/#about">About</a>
+                    <a href="/verify">Verify Broker</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button class="lang-toggle">EN / RW</button>
+                    <a href="/login" class="btn-primary">Login</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Rwanda Real Estate Brokers Platform (RREBP). All rights reserved.</p>
+        <p>
+            <a href="/terms">Terms of Service</a> | 
+            <a href="/privacy">Privacy Policy</a> | 
+            <a href="/contact">Contact</a>
+        </p>
+    </footer>
+
 </body>
 </html>

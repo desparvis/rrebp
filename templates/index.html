@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Introduction section -->
+<section id="home" class="hero-section">
+    <h1>Ensuring Broker's Transparency In Rwanda</h1>
+    <p>The Real Estate Brokers Platform(RREBP) is a platform that provides real estate assocations with an accessible way to register brokers on an immutable registry, allowing real estate clients to verify their legitimacy.</p>
+    <a href="/verify" class="btn-primary" style="font-size: 1.1rem; padding: 0.75rem 2rem;">Verify a Broker Profile</a>
+</section>
+
+<!-- Links to platform actions -->
+<section class="action-section">
+    <a href="/register-broker" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-user"></i></div>
+        <div class="action-text">
+            <h3>Broker Registration</h3>
+            <p>Use your credentials to apply to be under a recognized real estate association.</p>
+        </div>
+    </a>
+
+    <a href="/register-association" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-house"></i></div>
+        <div class="action-text">
+            <h3>Association Registration</h3>
+            <p>Register a real estate association to manage and verify brokers easily.</p>
+        </div>
+    </a>
+
+    <a href="/broker-rankings" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="action-text">
+            <h3>View Broker Rankings</h3>
+            <p>Property owners can evaluate highly-rated brokers.</p>
+        </div>
+    </a>
+</section>
+
+
+<section id="about" class="about-section">
+    <h2>About The Platform</h2>
+    <p>RREBP serves as the definitive administrative infrastructure for real estate governance in Rwanda. By utilizing advanced database verification, we provide a single source of truth for property owners, brokers, and governing bodies.</p>
+    <p>Our platform allows regional and national associations to manage their respective members autonomously, while maintaining strict, top-level compliance standards overseen by platform administrators. This approach protects against fraudulent practices and elevates the professional standard of the Rwandan real estate market.</p>
+</section>
+{% endblock %}
