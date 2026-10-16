@@ -1,7 +1,7 @@
 # Rwanda Real Estate Brokers Platform(RREBP)
 
 Github Repository: [link](https://github.com/desparvis/rrebp) <br>
-MVP Demo Video: [youtubelink](https://youtu.be/1rWhGEpu08I?si=vz7Anm2vfKNwKzqC)
+MVP Demo Video: [youtubelink](https://youtu.be/1rWhGEpu08I?si=vz7Anm2vfKNwKzqC) <br>
 Link to App Screenshots: [screenshots](https://docs.google.com/document/d/1DnhF0Yj8vkNePUTNB6AGSmyD0gIeQpu9TW0RJPdaSgQ/edit?tab=t.0)
 
 ## Description
@@ -113,3 +113,15 @@ python seed.py
 ```
 python app.py
 ```
+
+## Deployment Plans
+For the final project deployment, the application architecture will transition from a local development environment to a scalable, cloud-based infrastructure:
+
+**Web Application Hosting (Vercel):** The Flask backend and frontend templates will be deployed serverless via Vercel. Vercel provides seamless continuous integration from GitHub, fast global delivery, and out-of-the-box HTTPS for secure web traffic.
+
+**Database Migration (Supabase):** The database will shift from local SQLite3 to Supabase (a managed PostgreSQL database). While SQLite3 is a file-based system excellent for local prototyping, Supabase provides the robust scalability, enterprise-grade concurrency, and cloud accessibility required for a production-level real estate registry.
+
+**Smart Contract Deployment (Ethereum Sepolia Testnet):** The RREBP_BrokerRegistry smart contract will be deployed to the Sepolia testnet. Sepolia perfectly mirrors the Ethereum Mainnet environment, allowing full interaction with MetaMask and Ethers.js, but utilizes "test-ETH." This ensures a fully functional, zero-cost environment for demonstration and testing without incurring real financial gas fees.
+
+## Author
+Credo Desparvis Gutabarwa
