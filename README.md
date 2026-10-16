@@ -34,14 +34,14 @@ Data in the RREBP platform is visualized using admin dashboards and a public ver
 ## Security measures
 
 The RREBP platform combines both off-chain security and blockchain verification.<br>
-- Password hashing: Passwords are hashed before being stored on the database using Werkzeug security tools.<br>
+- Password hashing: Passwords are hashed before being stored on the database using ***Werkzeug*** security tools.<br>
 - Role-Based Access: Separate permissions are given to different admins, the super admin has most control while the association admin controls the brokers.<br>
 - Data Privacy: Broker identification information is kept off-chain while cryptographic hashes are used for blockchain verification.<br>
 - Wallet Authorization: Only approved association wallets can perform authorized blockchain operations.
 - Duplicate Prevention: The smart contract rejects duplicate broker registrations.
 
 ## Schematic Design and Component Interaction
-
+```
     Super Admin / Association Admin
               |
        Frontend Interface
@@ -61,7 +61,15 @@ The RREBP platform combines both off-chain security and blockchain verification.
               Broker Verification
                      |
                Public Users
+```
 ### Main components
+
+- Frontend(HTML, CSS, JavaScript): Provides the landing, administrative, and pubic verification interfaces. <br>
+- Backend(Flask): Provides the logic for authentication, organization and association management, and broker records management.<br>
+- Database(SQLite): Provides storage for off-chain data.<br>
+- MetaMask and Ethers.js: Allows smart contract and wallet interaction.<br>
+- Smart contract(RREBP_BrokerRegistry): Provides a blockchain verification registry.<br>
+
 ### Diagram description
 
 Here we can see that the Super Admin and the Association Admin use the frontend interface which is built using JavaScript, HTML, and CSS. It talks to a Flask backend which stores the data on a SQLite Database. In addition, when interacting with the interface, actions that trigger metamask to perform a transaction. That is because of the ethers.js library helps interact with the deployed smart contract. End users can then use the public verification to interface to verify a broker's status and information.
