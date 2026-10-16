@@ -74,3 +74,41 @@ The RREBP platform combines both off-chain security and blockchain verification.
 
 Here we can see that the Super Admin and the Association Admin use the frontend interface which is built using JavaScript, HTML, and CSS. It talks to a Flask backend which stores the data on a SQLite Database. In addition, when interacting with the interface, actions that trigger metamask to perform a transaction. That is because of the ethers.js library helps interact with the deployed smart contract. End users can then use the public verification to interface to verify a broker's status and information.
 
+## How to setup the environment
+
+
+### Clone the repository
+```
+git clone [Your-Repo-URL]
+```
+
+```
+cd rrebp
+```
+
+### Create and activate a virtual environment
+```
+python -m venv venv
+```
+
+```
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+```
+
+### Install all backend dependencies
+```
+pip install Flask Flask-SQLAlchemy python-dotenv Werkzeug
+```
+
+### Create your environment variables
+### Create a .env file in the root directory and add:
+### SECRET_KEY=your_secure_random_key
+
+### Initialize and seed the local SQLite database
+```
+python seed.py
+```
+### Run the Flask application
+```
+python app.py
+```
