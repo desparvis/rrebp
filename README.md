@@ -2,6 +2,7 @@
 
 Github Repository: [link](https://github.com/desparvis/rrebp) <br>
 MVP Demo Video: [youtubelink](https://youtu.be/1rWhGEpu08I?si=vz7Anm2vfKNwKzqC)
+Link to App Screenshots: [screenshots](https://docs.google.com/document/d/1DnhF0Yj8vkNePUTNB6AGSmyD0gIeQpu9TW0RJPdaSgQ/edit?tab=t.0)
 
 ## Description
 
@@ -100,9 +101,9 @@ source venv/bin/activate  # On Windows use: venv\Scripts\activate
 pip install Flask Flask-SQLAlchemy python-dotenv Werkzeug
 ```
 
-### Create your environment variables
-### Create a .env file in the root directory and add:
-### SECRET_KEY=your_secure_random_key
+Create your environment variables
+Create a .env file in the root directory and add:
+SECRET_KEY=your_secure_random_key
 
 ### Initialize and seed the local SQLite database
 ```
