@@ -4,5 +4,14 @@
 # Ignore virtual environments 
 .venv/
 
-#Ignore pycache
+# Ignore pycache
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Databases
+
+*.db
+*.sqlite3
+instance/
+

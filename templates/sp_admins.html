@@ -1,0 +1,80 @@
+{% extends "sp_base.html" %}
+
+{% block title %}Manage Admins | Super Admin{% endblock %}
+
+{% block content %}
+<style>
+    /* Same table styles as organizations */
+    .data-table { width: 100%; border-collapse: collapse; background-color: var(--bg-white); border: 1px solid var(--border-grey); border-radius: 6px; overflow: hidden; }
+    .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-grey); }
+    .data-table th { background-color: #F9FAFB; font-weight: 600; color: var(--text-dark); text-transform: uppercase; font-size: 0.85rem; }
+    
+    .status-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; }
+    .status-pending { background-color: #FEF3C7; color: #92400E; }
+    .status-active { background-color: #D1FAE5; color: #065F46; }
+    .status-revoked { background-color: #FEE2E2; color: #991B1B; }
+    
+    .btn-approve { background-color: #10B981; color: white; padding: 0.4rem 0.75rem; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; }
+    .btn-revoke { background-color: #EF4444; color: white; padding: 0.4rem 0.75rem; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; }
+</style>
+
+<div class="admin-header">
+    <h1>Association Admins</h1>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background-color: #EFF6FF; color: #1D4ED8; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Organization</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for admin in admins %}
+        <tr>
+            <td><strong>{{ admin.full_name }}</strong></td>
+            <td>{{ admin.email }}</td>
+            <td>{{ admin.organization.name }}</td>
+            <td>
+                <span class="status-badge 
+                    {% if admin.account_status == 'Pending' %}status-pending
+                    {% elif admin.account_status == 'Active' %}status-active
+                    {% else %}status-revoked{% endif %}">
+                    {{ admin.account_status }}
+                </span>
+            </td>
+            <td>
+                <div style="display: flex; gap: 0.5rem;">
+                    {% if admin.account_status == 'Pending' or admin.account_status == 'Revoked' %}
+                    <form action="{{ url_for('superadmin.approve_admin', admin_id=admin.id) }}" method="POST">
+                        <button type="submit" class="btn-approve">Approve</button>
+                    </form>
+                    {% endif %}
+                    
+                    {% if admin.account_status == 'Active' or admin.account_status == 'Pending' %}
+                    <form action="{{ url_for('superadmin.revoke_admin', admin_id=admin.id) }}" method="POST" onsubmit="return confirm('Revoke this admin access?');">
+                        <button type="submit" class="btn-revoke">Revoke</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">No admins registered yet.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

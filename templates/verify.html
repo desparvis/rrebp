@@ -1,23 +1,99 @@
 {% extends "base.html" %}
-
-{% block title %}Verify Broker{% endblock %}
+{% block title %}Verify Broker | RREBP{% endblock %}
 
 {% block content %}
-<div class="verify-container">
-    <div class="verify-card">
-        <div class="verify-header">
-            <h2>Verify Broker Credentials</h2>
-            <p>Enter a broker's certification code to  verify their professional status.</p>
-        </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="application/javascript"></script>
+
+<div style="background-color: var(--hover-grey); min-height: 70vh; padding: 4rem 1rem;">
+    <div style="max-width: 600px; margin: 0 auto;">
         
-        <!-- Form for submitting the certification code -->
-        <form action="/verify" method="POST" class="verify-form">
-            <div class="form-group">
-                <label for="certification_string">Certification Code</label>
-                <input type="text" id="certification_string" name="certification_string" placeholder="eg. RWAREB-2026-x1fB3e..." required>
+        <h1 style="text-align: center; color: var(--text-dark); font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">Verify a Broker</h1>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Enter a license number to verify their authorization on the blockchain.</p>
+
+        <!-- Search Box -->
+        <div style="background-color: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem;">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div style="background-color: #FEE2E2; color: #991B1B; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; text-align: center;">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('landing.verify') }}" method="POST" style="display: flex; gap: 1rem;">
+                <input type="text" name="license_number" placeholder="Enter License Number e.g., RWAREB-2026-XXX" required style="flex: 1; padding: 0.85rem; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 1rem;">
+                <button type="submit" class="btn-primary" style="padding: 0 1.5rem;"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            </form>
+        </div>
+
+        <!-- Result Card -->
+        {% if broker %}
+        <div style="background-color: white; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--btn-blue);">
+            <h2 style="margin-top: 0;">{{ broker.full_name }}</h2>
+            <p style="color: var(--text-muted); font-size: 1.1rem;">{{ broker.professional_title }}</p>
+            
+            <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 1.5rem 0;">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <strong style="display: block; color: var(--text-muted); font-size: 0.85rem;">License Number</strong>
+                    <span>{{ broker.license_number }}</span>
+                </div>
+                <div>
+                    <strong style="display: block; color: var(--text-muted); font-size: 0.85rem;">Status</strong>
+                    <span style="font-weight: 600;">{{ broker.status }}</span>
+                </div>
             </div>
-            <button type="submit" class="btn-primary btn-block">Verify</button>
-        </form>
+
+            <!-- Blockchain Status UI -->
+            <div id="blockchain-status" style="background-color: #F3F4F6; padding: 1rem; border-radius: 6px; text-align: center; border: 1px solid #E5E7EB;">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Checking Blockchain...
+            </div>
+        </div>
+
+        <script>
+            // This runs instantly to check the smart contract if a broker was found
+            async function verifyOnChain() {
+                const brokerHash = "{{ broker.verification_code }}";
+                const statusDiv = document.getElementById('blockchain-status');
+
+                if (!brokerHash || brokerHash === "None") {
+                    statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-triangle-exclamation"></i> Not registered on blockchain</span>';
+                    statusDiv.style.backgroundColor = '#FEF2F2';
+                    statusDiv.style.borderColor = '#FCA5A5';
+                    return;
+                }
+
+                try {
+                    // Address
+                    const contractAddress = "0xa52ECb8501f91E0cfa36608B45dBcD092C6222F6"; 
+                    const abi = ["function brokers(bytes32) public view returns (bool)"];
+                    
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const contract = new ethers.Contract(contractAddress, abi, provider);
+
+                    // Ask the blockchain if this hash is valid
+                    const isVerified = await contract.brokers(brokerHash);
+
+                    if (isVerified) {
+                        statusDiv.innerHTML = '<span style="color: #065F46; font-weight: bold;"><i class="fa-solid fa-shield-check"></i> Verified Authentic on Blockchain</span><br><span style="font-size: 0.75rem; color: #6B7280; font-family: monospace; word-break: break-all;">Hash: ' + brokerHash + '</span>';
+                        statusDiv.style.backgroundColor = '#D1FAE5';
+                        statusDiv.style.borderColor = '#34D399';
+                    } else {
+                        statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-xmark"></i> Blockchain Verification Failed (Revoked)</span>';
+                        statusDiv.style.backgroundColor = '#FEF2F2';
+                        statusDiv.style.borderColor = '#FCA5A5';
+                    }
+                } catch (error) {
+                    console.error(error);
+                    statusDiv.innerHTML = '<span style="color: #92400E;">Could not connect to blockchain network. Make sure MetaMask is unlocked.</span>';
+                }
+            }
+
+            verifyOnChain();
+        </script>
+        {% endif %}
+
     </div>
 </div>
 {% endblock %}

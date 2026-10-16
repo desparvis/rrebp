@@ -1,0 +1,39 @@
+{% extends "sp_base.html" %}
+
+{% block title %}Dashboard | Super Admin{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>System Overview</h1>
+    <a href="/spdash/organizations/new" class="btn-primary"><i class="fa-solid fa-plus"></i> Register Organization</a>
+</div>
+
+<div class="metrics-grid">
+    <!-- Active Organizations -->
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fa-solid fa-building-circle-check"></i></div>
+        <div class="metric-data">
+            <h3>Active Organizations</h3>
+            <p>{{ active_orgs }}</p> <!-- Dynamic now -->
+        </div>
+    </div>
+
+    <!-- Total Association Admins -->
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="metric-data">
+            <h3>Registered Admins</h3>
+            <p>{{ total_admins }}</p> <!-- We will pass this from superadmin.py -->
+        </div>
+    </div>
+
+    <!-- Suspended Admins -->
+    <div class="metric-card" style="border-left: 4px solid #DC2626;">
+        <div class="metric-icon" style="color: #DC2626; background-color: #FEF2F2;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="metric-data">
+            <h3>Suspended Entities</h3>
+            <p>{{ suspended_orgs }}</p> <!-- Dynamic now -->
+        </div>
+    </div>
+</div>
+{% endblock %}

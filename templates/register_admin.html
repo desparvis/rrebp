@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Register Association Admin | RREBP{% endblock %}
+
+{% block content %}
+<style>
+    .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4rem 1rem;
+        min-height: 70vh;
+        background-color: var(--hover-grey);
+    }
+    .form-card {
+        background-color: var(--bg-white);
+        border: 1px solid var(--border-grey);
+        border-radius: 8px;
+        width: 100%;
+        max-width: 500px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .form-card h2 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: var(--text-dark);
+        font-family: 'Playfair Display', serif;
+    }
+    .form-card p {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+        font-size: 0.95rem;
+    }
+    .form-group {
+        margin-bottom: 1.25rem;
+        display: flex;
+        flex-direction: column;
+    }
+    .form-group label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+    }
+    .form-group input, .form-group select {
+        padding: 0.85rem;
+        border: 1px solid var(--border-grey);
+        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: var(--btn-blue);
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-card">
+        <h2>Admin Registration</h2>
+        <p>Apply for administrative access to manage your organization's brokers.</p>
+
+        <form action="{{ url_for('landing.register_admin') }}" method="POST">
+            
+            <div class="form-group">
+                <label for="organization_id">Select Your Organization</label>
+                <select id="organization_id" name="organization_id" required>
+                    <option value="" disabled selected>-- Choose Organization --</option>
+                    {% for org in organizations %}
+                        <option value="{{ org.id }}">{{ org.name }} ({{ org.registration_number }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Official Work Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Create Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; margin-top: 1rem;">Submit Application</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

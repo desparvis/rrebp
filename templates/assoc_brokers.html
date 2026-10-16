@@ -1,0 +1,128 @@
+{% extends "assoc_base.html" %}
+{% block title %}Manage Brokers | Organization{% endblock %}
+
+{% block content %}
+<!-- Import Ethers.js to talk to the blockchain -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="application/javascript"></script>
+
+<div class="admin-header">
+    <h1>Brokers</h1>
+    <a href="/assocdash/brokers/new" class="btn-primary"><i class="fa-solid fa-plus"></i> Add Broker</a>
+</div>
+
+{% with messages = get_flashed_messages(category_filter=["success", "info", "error"]) %}
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background-color: #EFF6FF; color: #1D4ED8; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; border: 1px solid #BFDBFE;">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<table class="data-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <thead>
+        <tr style="background-color: #F9FAFB; text-align: left;">
+            <th style="padding: 1rem;">Name</th>
+            <th style="padding: 1rem;">License No.</th>
+            <th style="padding: 1rem;">Email</th>
+            <th style="padding: 1rem;">Status</th>
+            <th style="padding: 1rem;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for broker in brokers %}
+        <tr style="border-top: 1px solid #E5E7EB;">
+            <td style="padding: 1rem;"><strong>{{ broker.full_name }}</strong></td>
+            <td style="padding: 1rem;">{{ broker.license_number }}</td>
+            <td style="padding: 1rem;">{{ broker.email }}</td>
+            <td style="padding: 1rem;">
+                {% if broker.status == 'Active' %}
+                    <span style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #D1FAE5; color: #065F46;">{{ broker.status }}</span>
+                {% elif broker.status == 'Suspended' %}
+                    <span style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #FEE2E2; color: #991B1B;">{{ broker.status }}</span>
+                {% else %}
+                    <span style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #FEF3C7; color: #92400E;">{{ broker.status }}</span>
+                {% endif %}
+            </td>
+            <td style="padding: 1rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                
+                <!-- Blockchain Deploy / Status -->
+                {% if broker.status == 'Pending Registration' %}
+                    <button onclick="deployBroker('{{ broker.id }}', '{{ broker.license_number }}', '{{ broker.organization_id }}')" class="btn-primary" style="background-color: #8B5CF6; font-size: 0.8rem; padding: 0.4rem 0.6rem; cursor: pointer; border: none; border-radius: 4px; color: white;">
+                        <i class="fa-brands fa-ethereum"></i> Deploy
+                    </button>
+                {% else %}
+                    <span style="color: #059669; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem;"><i class="fa-solid fa-check"></i> On-Chain</span>
+                {% endif %}
+
+                <!-- Suspend / Activate Button -->
+                <form action="/assocdash/brokers/{{ broker.id }}/suspend" method="POST" style="margin: 0;">
+                    <button type="submit" style="background-color: #F59E0B; color: white; border: none; padding: 0.4rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                        {{ 'Activate' if broker.status == 'Suspended' else 'Suspend' }}
+                    </button>
+                </form>
+
+                <!-- Delete Button -->
+                <form action="/assocdash/brokers/{{ broker.id }}/delete" method="POST" onsubmit="return confirm('Delete this broker completely?');" style="margin: 0;">
+                    <button type="submit" style="background-color: #DC2626; color: white; border: none; padding: 0.4rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                        Delete
+                    </button>
+                </form>
+
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" style="text-align: center; padding: 2rem;">No brokers found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    async function deployBroker(brokerId, licenseNumber, orgId) {
+        if (typeof window.ethereum === 'undefined') {
+            alert('Please install MetaMask to deploy to the blockchain!');
+            return;
+        }
+
+        try {
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+
+            const dataToHash = licenseNumber + orgId;
+            const brokerHash = ethers.utils.id(dataToHash); 
+
+            // Deployed contract address
+            const contractAddress = "0xa52ECb8501f91E0cfa36608B45dBcD092C6222F6"; 
+            
+            const abi = [
+                "function registerBroker(bytes32 _brokerHash) public",
+                "function toggleBrokerStatus(bytes32 _brokerHash, bool _status) public"
+            ];
+            
+            const contract = new ethers.Contract(contractAddress, abi, signer);
+
+            alert("Please confirm the transaction in MetaMask.");
+            const tx = await contract.registerBroker(brokerHash);
+            
+            console.log("Transaction sent! Waiting for confirmation...");
+            await tx.wait(); 
+            console.log("Transaction mined! Hash:", tx.hash);
+
+            const response = await fetch(`/assocdash/brokers/${brokerId}/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ broker_hash: brokerHash })
+            });
+
+            if (response.ok) {
+                alert("Broker successfully registered on the blockchain!");
+                window.location.reload();
+            }
+
+        } catch (error) {
+            console.error("Blockchain error:", error);
+            alert("Transaction failed or was rejected. Check console for details.");
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Super Admin{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Main styles (variables) and Admin styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
+</head>
+<body>
+    
+    <div class="admin-layout">
+        <!-- Side Navigation -->
+        <aside class="admin-sidebar">
+            <a href="/" class="logo">RREBP Admin</a>
+           <nav class="admin-nav">
+                <a href="/spdash" class="{% if request.path == '/spdash' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+                <a href="/spdash/organizations" class="{% if 'organizations' in request.path %}active{% endif %}"><i class="fa-solid fa-building"></i> Organizations</a>
+                <a href="/spdash/admins" class="{% if 'admins' in request.path %}active{% endif %}"><i class="fa-solid fa-users-gear"></i> Association Admins</a>
+                <a href="/spdash/logout" style="margin-top: auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+</body>
+</html>

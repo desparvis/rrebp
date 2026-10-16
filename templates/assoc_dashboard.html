@@ -1,0 +1,26 @@
+{% extends "assoc_base.html" %}
+{% block title %}Dashboard | Organization{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>Organization Overview</h1>
+    <a href="/assocdash/brokers/new" class="btn-primary"><i class="fa-solid fa-plus"></i> Add New Broker</a>
+</div>
+
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fa-solid fa-id-card-clip"></i></div>
+        <div class="metric-data">
+            <h3>Total Brokers</h3>
+            <p>{{ total_brokers }}</p>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon" style="color: #059669; background-color: #D1FAE5;"><i class="fa-solid fa-link"></i></div>
+        <div class="metric-data">
+            <h3>Verified on Blockchain</h3>
+            <p>0</p> <!-- We will connect this next -->
+        </div>
+    </div>
+</div>
+{% endblock %}

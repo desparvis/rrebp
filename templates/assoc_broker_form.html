@@ -1,0 +1,42 @@
+{% extends "assoc_base.html" %}
+{% block title %}Add Broker | Organization{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>Register New Broker</h1>
+    <a href="/assocdash/brokers" class="btn-primary" style="background-color: #6B7280;">Cancel</a>
+</div>
+
+<div style="background-color: white; padding: 2rem; border-radius: 6px; max-width: 600px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <form action="/assocdash/brokers/new" method="POST">
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Full Name</label>
+            <input type="text" name="full_name" required style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Email Address</label>
+            <input type="email" name="email" required style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+            <div style="flex: 1;">
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Phone Number</label>
+                <input type="text" name="phone" required style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; box-sizing: border-box;">
+            </div>
+            <div style="flex: 1;">
+                <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">License Number</label>
+                <input type="text" name="license_number" required style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; box-sizing: border-box;">
+            </div>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Professional Title</label>
+            <input type="text" name="professional_title" placeholder="e.g. Senior Real Estate Agent" style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; box-sizing: border-box;">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 500; margin-bottom: 0.5rem;">Bio</label>
+            <textarea name="bio" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; box-sizing: border-box;"></textarea>
+        </div>
+        
+        <button type="submit" class="btn-primary" style="padding: 0.75rem 1.5rem;">Save Broker Locally</button>
+    </form>
+</div>
+{% endblock %}
