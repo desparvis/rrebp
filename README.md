@@ -13,14 +13,14 @@ RREBP uses a Solidity Smart Contract, the RREBP_BrokerRegistry.sol to maintain o
 
 Here is a snippet:
 
-struct Broker {
-    bytes32 brokerHash;
-    address associationWallet;
-    bool isActive;
-    uint256 registeredAt;
-}
+struct Broker { <br>
+    bytes32 brokerHash;<br>
+    address associationWallet;<br>
+    bool isActive;<br>
+    uint256 registeredAt;<br>
+}<br>
 
-mapping(bytes32 => Broker) public brokers;
+mapping(bytes32 => Broker) public brokers;<br>
 mapping(address => bool) public authorizedAssociations;
 
 ## Data visualization
