@@ -47,7 +47,20 @@ def logout():
 @superadmin.route('/spdash')
 @login_required
 def spdash():
-    return render_template("sp_dashboard.html")
+    # 1. Count active organizations
+    active_orgs = Organization.query.filter_by(status='Active').count()
+    
+    # 2. Count all registered association admins
+    total_admins = AssociationAdmin.query.count()
+    
+    # 3. Count suspended organizations
+    suspended_orgs = Organization.query.filter_by(status='Suspended').count()
+    
+    # Pass the variables to the template
+    return render_template("sp_dashboard.html", 
+                           active_orgs=active_orgs, 
+                           total_admins=total_admins, 
+                           suspended_orgs=suspended_orgs)
 
 @superadmin.route('/spdash/organizations')
 @login_required
