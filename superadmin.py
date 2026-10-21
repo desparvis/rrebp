@@ -148,3 +148,5 @@ def revoke_admin(admin_id):
     db.session.commit()
     flash(f"Admin {admin.full_name}'s access has been revoked.", "error")
     return redirect(url_for('superadmin.manage_admins'))
+
+0xa52ECb8501f91E0cfa36608B45dBcD092C6222F6
