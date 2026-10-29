@@ -52,6 +52,7 @@ class AssociationAdmin(db.Model):
     created_by = db.Column(db.String(36), db.ForeignKey('super_admins.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    wallet_address = db.Column(db.String(100), nullable=True)
 
 class Broker(db.Model):
     __tablename__ = 'brokers'
@@ -61,15 +62,15 @@ class Broker(db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(30), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.Text, nullable=False)
     professional_title = db.Column(db.String(100))
     license_number = db.Column(db.String(100), unique=True, nullable=False)
     profile_photo_url = db.Column(db.String(255), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     
-    # We will save the blockchain hash here later!
     verification_code = db.Column(db.String(255), nullable=True) 
     
-    status = db.Column(db.String(20), default='Pending Registration') # Will change to 'Active' after blockchain deployment
+    status = db.Column(db.String(20), default='Pending Registration')
     
     verified_at = db.Column(db.DateTime, nullable=True)
     expires_at = db.Column(db.DateTime, nullable=True)

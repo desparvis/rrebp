@@ -110,3 +110,171 @@
     font-weight: 600;
     color: var(--text-dark);
 }
+
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    /* 1. Convert Sidebar to Bottom Nav Bar */
+    .admin-layout {
+        flex-direction: column;
+    }
+
+    .admin-sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        z-index: 1000;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        padding-bottom: env(safe-area-inset-bottom); /* Fix for iPhone home bar */
+    }
+
+    .admin-sidebar .logo {
+        display: none; /* Hide logo in the bottom tab bar to save space */
+    }
+
+    .admin-nav {
+        flex-direction: row;
+        width: 100%;
+        padding: 0;
+    }
+
+    /* Stack icons and text for mobile tabs */
+    .admin-nav a {
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0.75rem 0.25rem;
+        font-size: 0.7rem;
+        text-align: center;
+        border-left: none; /* Remove desktop border */
+        border-top: 3px solid transparent; /* Move indicator to top */
+    }
+
+    .admin-nav i {
+        margin-right: 0;
+        margin-bottom: 0.25rem;
+        font-size: 1.2rem;
+    }
+
+    .admin-nav a:hover, .admin-nav a.active {
+        border-left: none;
+        border-top: 3px solid var(--btn-blue);
+    }
+
+    /* 2. Adjust Main Content Area */
+    .admin-main {
+        padding: 1rem;
+        padding-bottom: 80px; /* Crucial: Prevents the bottom nav from hiding content */
+    }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    /* 3. Stack the Dashboard Metrics */
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* 4. Responsive Table Wrapper */
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Smooth swiping on iOS */
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    /* Remove shadow from actual table since wrapper has it now */
+    .data-table {
+        box-shadow: none !important; 
+    }
+}
+
+/* Pop Up Modal box */
+
+/* Dark Blurred Background Overlay */
+.ui-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(17, 24, 39, 0.7); /* Dark overlay */
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.ui-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* The Confirmation Box */
+.confirm-box {
+    background-color: var(--bg-white);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.ui-overlay.active .confirm-box {
+    transform: translateY(0);
+}
+
+.confirm-box i {
+    font-size: 3rem;
+    color: #DC2626; /* Red warning icon */
+    margin-bottom: 1rem;
+}
+
+.confirm-box h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-dark);
+}
+
+.confirm-box p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+/* The MetaMask Loader Box */
+.loader-box {
+    text-align: center;
+    color: white;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1.5rem auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

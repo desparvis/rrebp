@@ -5,55 +5,103 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
     type="application/javascript"></script>
 
-<div style="background-color: var(--hover-grey); min-height: 70vh; padding: 4rem 1rem;">
+<style>
+    .verify-wrapper {
+        background-color: var(--hover-grey);
+        min-height: 70vh;
+        padding: 4rem 1rem;
+    }
+    
+    .verify-box {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .result-box {
+        background-color: white;
+        padding: 2.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border-top: 4px solid var(--btn-blue);
+    }
+    
+    .search-form {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .result-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 600px) {
+        .verify-wrapper {
+            padding: 2rem 1rem;
+        }
+        .verify-box {
+            padding: 1.5rem;
+        }
+        .result-box {
+            padding: 1.5rem;
+        }
+        .search-form {
+            flex-direction: column;
+        }
+        .search-form button {
+            width: 100%;
+            padding: 0.85rem;
+        }
+        .result-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+    }
+</style>
+
+<div class="verify-wrapper">
     <div style="max-width: 600px; margin: 0 auto;">
 
-        <h1
-            style="text-align: center; color: var(--text-dark); font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">
+        <h1 style="text-align: center; color: var(--text-dark); font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">
             Verify a Broker</h1>
         <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Enter a license number to verify
             their authorization on the blockchain.</p>
 
         <!-- Search Box -->
-        <div
-            style="background-color: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 2rem;">
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-            {% for message in messages %}
-            <div
-                style="background-color: #FEE2E2; color: #991B1B; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; text-align: center;">
-                {{ message }}</div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
-
-            <form action="{{ url_for('landing.verify') }}" method="POST" style="display: flex; gap: 1rem;">
+        <div class="verify-box">
+            <!-- (Old flash messages removed because base.html handles toasts now!) -->
+            <form action="{{ url_for('landing.verify') }}" method="POST" class="search-form">
                 <input type="text" name="license_number" placeholder="Enter License Number e.g., RWAREB-2026-XXX"
                     required
                     style="flex: 1; padding: 0.85rem; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 1rem;">
-                <button type="submit" class="btn-primary" style="padding: 0 1.5rem;"><i
-                        class="fa-solid fa-magnifying-glass"></i> Search</button>
+                <button type="submit" class="btn-primary" style="padding: 0.85rem 1.5rem;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
             </form>
         </div>
 
         <!-- Result Card -->
         {% if broker %}
-        <div
-            style="background-color: white; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--btn-blue);">
-            <h2 style="margin-top: 0;">{{ broker.full_name }}</h2>
-            <p style="color: var(--text-muted); font-size: 1.1rem;">{{ broker.professional_title }}</p>
+        <div class="result-box">
+            <h2 style="margin-top: 0; color: var(--text-dark);">{{ broker.full_name }}</h2>
+            <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0;">{{ broker.professional_title }}</p>
 
             <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 1.5rem 0;">
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="result-grid">
                 <div>
                     <strong style="display: block; color: var(--text-muted); font-size: 0.85rem;">License
                         Number</strong>
-                    <span>{{ broker.license_number }}</span>
+                    <span style="color: var(--text-dark);">{{ broker.license_number }}</span>
                 </div>
                 <div>
                     <strong style="display: block; color: var(--text-muted); font-size: 0.85rem;">Status</strong>
-                    <span style="font-weight: 600;">{{ broker.status }}</span>
+                    <span style="font-weight: 600; color: var(--text-dark);">{{ broker.status }}</span>
                 </div>
             </div>
 
@@ -78,7 +126,7 @@
 
                 try {
                     // Contract Configuration
-                    const contractAddress = "0xa52ECb8501f91E0cfa36608B45dBcD092C6222F6";
+                    const contractAddress = "0xfAF6FA9F4fFE82bE38e10E68661945383445cA7C";
                     const abi = [
                         "function brokers(bytes32) public view returns (bytes32 brokerHash, address associationWallet, bool isActive, uint256 registeredAt)"
                     ];

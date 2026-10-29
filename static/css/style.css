@@ -302,3 +302,211 @@ main {
     font-size: 1.05rem;
     margin-top: 0.5rem;
 }
+
+
+/* Flash messages styling */
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    max-width: calc(100vw - 40px);
+}
+
+.toast-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    box-sizing: border-box;
+    width: max-content;
+    min-width: 300px;
+    max-width: 400px;
+
+    padding: 1rem 1.5rem;
+    border-left: 4px solid transparent;
+    border-radius: 6px;
+
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    font-size: 0.9rem;
+    font-weight: 500;
+
+    opacity: 1;
+    transform: translateX(0);
+
+    transition:
+        transform 0.5s ease-in-out,
+        opacity 0.5s ease-in-out;
+}
+
+.toast-success {
+    background-color: #D1FAE5;
+    color: #065F46;
+    border-left-color: #059669;
+}
+
+.toast-error {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border-left-color: #DC2626;
+}
+
+.toast-warning {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border-left-color: #D97706;
+}
+
+.toast-info {
+    background-color: #EFF6FF;
+    color: #1E40AF;
+    border-left-color: #2563EB;
+}
+
+.toast-message {
+    overflow-wrap: anywhere;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    margin-left: auto;
+    padding: 0;
+
+    background: none;
+    border: none;
+
+    color: inherit;
+    opacity: 0.6;
+
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+
+    transition: opacity 0.2s ease;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+.toast-hiding {
+    transform: translateX(120%);
+    opacity: 0;
+}
+
+@media (max-width: 480px) {
+    #toast-container {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+    }
+
+    .toast-alert {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        padding: 1rem;
+    }
+}
+
+/* Responsivess */
+
+/* Hamburger Menu Button */
+.mobile-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+/* Tablet & Mobile Screens */
+@media (max-width: 768px) {
+    /* Header & Navigation */
+    nav {
+        padding: 1rem;
+        flex-wrap: wrap; 
+    }
+
+    .mobile-toggle {
+        display: block; 
+    }
+
+    .nav-menu {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding-top: 1.5rem;
+        margin-top: 0.5rem;
+        border-top: 1px solid var(--border-grey);
+    }
+
+    /* JavaScript will add this class when the hamburger is clicked */
+    .nav-menu.active {
+        display: flex; 
+    }
+
+    .nav-links {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        gap: 1rem;
+    }
+
+    .nav-links a {
+        margin-right: 0;
+        font-size: 1.1rem;
+    }
+
+    .nav-actions {
+        border-left: none;
+        padding-left: 0;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Main Container Padding */
+    main {
+        padding: 1rem;
+    }
+
+    /* Hero Section */
+    .hero-section {
+        padding: 2rem 0;
+    }
+
+    .hero-section h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero-section p {
+        font-size: 1rem;
+    }
+
+    .action-section {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem 0 2rem 0;
+    }
+
+    .verify-container {
+        padding: 2rem 0.5rem;
+    }
+
+    .verify-card {
+        padding: 1.5rem;
+    }
+}

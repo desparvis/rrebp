@@ -8,28 +8,165 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- We can reuse the admin_style.css since the layout structure is identical! -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
 </head>
 <body>
     
     <div class="admin-layout">
-        <!-- Side Navigation -->
-        <aside class="admin-sidebar" style="background-color: #1F2937;"> <!-- Slightly lighter dark for Assoc Admins -->
-            <a href="/assocdash" class="logo">RREBP Organization</a>
+        <!-- Side Navigation (Personalized) -->
+        <aside class="admin-sidebar" style="background-color: #1F2937;">
+            <div class="logo" style="padding: 1.5rem; border-bottom: 1px solid #374151;">
+                <span style="display: block; font-size: 1.1rem; font-weight: bold; line-height: 1.2; color: white;">{{ current_admin.organization.name }}</span>
+                <span style="display: block; font-size: 0.85rem; color: #9CA3AF; font-weight: normal; margin-top: 0.4rem;">{{ current_admin.full_name }}</span>
+            </div>
+            
             <nav class="admin-nav">
                 <a href="/assocdash" class="{% if request.path == '/assocdash' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i> Overview</a>
                 <a href="/assocdash/brokers" class="{% if 'brokers' in request.path %}active{% endif %}"><i class="fa-solid fa-id-card-clip"></i> Manage Brokers</a>
-                <a href="/assocdash/logout" style="margin-top: auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+                <a href="/assocdash/settings" class="{% if 'settings' in request.path %}active{% endif %}"><i class="fa-solid fa-wallet"></i> Wallet Settings</a>
+                
+                <a href="/assocdash/logout" style="margin-top: auto; border-top: 1px solid #374151;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
             </nav>
         </aside>
 
         <!-- Main Content Area -->
         <main class="admin-main">
+            <!-- Flask flash notifications -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div id="toast-container">
+                        {% for category, message in messages %}
+                            {% set toast_class = 'toast-success' if category == 'success' else 'toast-error' if category == 'error' else 'toast-warning' if category == 'warning' else 'toast-info' %}
+                            <div class="toast-alert {{ toast_class }}">
+                                <span class="toast-message">{{ message }}</span>
+                                <button type="button" class="toast-close" aria-label="Dismiss notification" onclick="this.closest('.toast-alert').remove()">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
             {% block content %}{% endblock %}
         </main>
     </div>
 
+    <!-- ========================================== -->
+    <!-- UI OVERLAYS (MODAL & LOADER)               -->
+    <!-- ========================================== -->
+    
+    <!-- 1. Confirmation Modal -->
+    <div class="ui-overlay" id="confirm-modal-overlay">
+        <div class="confirm-box">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <h3>Are you sure?</h3>
+            <p id="confirm-modal-msg">This action cannot be undone.</p>
+            <div class="confirm-buttons">
+                <button id="modal-cancel-btn" style="padding: 0.6rem 1.2rem; background-color: #F3F4F6; color: #374151; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Cancel</button>
+                <button id="modal-confirm-btn" style="padding: 0.6rem 1.2rem; background-color: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MetaMask Loading Spinner -->
+    <div class="ui-overlay" id="loader-overlay" style="z-index: 10000;">
+        <div class="loader-box">
+            <div class="spinner"></div>
+            <h3 id="loader-msg" style="margin: 0; font-size: 1.2rem; font-weight: 500;">Awaiting MetaMask...</h3>
+            <p style="margin-top: 0.5rem; color: #D1D5DB; font-size: 0.9rem;">Please do not close this window.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Toast Auto-Dismiss Engine ---
+            const initToasts = () => {
+                const toasts = document.querySelectorAll('.toast-alert:not(.initialized)');
+                toasts.forEach((toast) => {
+                    toast.classList.add('initialized');
+                    setTimeout(() => {
+                        if (toast.isConnected) {
+                            toast.classList.add('toast-hiding');
+                            setTimeout(() => toast.remove(), 500);
+                        }
+                    }, 4000);
+                });
+            };
+            initToasts();
+
+            // --- Global Toast Function (Summon from anywhere!) ---
+            window.showToast = function(message, type = 'error') {
+                let container = document.getElementById('toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toast-container';
+                    document.querySelector('.admin-main').prepend(container);
+                }
+                
+                const toastClass = type === 'success' ? 'toast-success' : (type === 'error' ? 'toast-error' : 'toast-warning');
+                const toastHTML = document.createElement('div');
+                toastHTML.className = `toast-alert ${toastClass}`;
+                toastHTML.innerHTML = `
+                    <span class="toast-message">${message}</span>
+                    <button type="button" class="toast-close" onclick="this.closest('.toast-alert').remove()">&times;</button>
+                `;
+                
+                container.appendChild(toastHTML);
+                initToasts(); // Attach the auto-dismiss timer to the new toast
+            };
+
+            // --- Custom Confirmation Modal Engine ---
+            const overlay = document.getElementById('confirm-modal-overlay');
+            const msgText = document.getElementById('confirm-modal-msg');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            let confirmAction = null; // Stores what happens when they click "Yes"
+
+            // 1. Intercept standard forms (Reject/Delete)
+            const forms = document.querySelectorAll('form[onsubmit*="confirm"]');
+            forms.forEach(form => {
+                const match = form.getAttribute('onsubmit').match(/confirm\(['"](.*?)['"]\)/);
+                const customMsg = match ? match[1] : "Are you sure you want to proceed?";
+                form.removeAttribute('onsubmit');
+
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    msgText.textContent = customMsg;
+                    confirmAction = () => form.submit();
+                    overlay.classList.add('active');
+                });
+            });
+
+            // 2. Intercept Logout Links
+            const logoutLinks = document.querySelectorAll('a[href*="logout"]');
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    msgText.textContent = "Are you sure you want to log out of your session?";
+                    confirmAction = () => window.location.href = link.href;
+                    overlay.classList.add('active');
+                });
+            });
+
+            // Modal Button Listeners
+            if(cancelBtn) cancelBtn.addEventListener('click', () => overlay.classList.remove('active'));
+            if(confirmBtn) confirmBtn.addEventListener('click', () => {
+                if (confirmAction) confirmAction();
+            });
+        });
+
+        // --- Global Loader Logic ---
+        window.showLoader = function(message = "Processing...") {
+            const msgEl = document.getElementById('loader-msg');
+            const overlayEl = document.getElementById('loader-overlay');
+            if (msgEl) msgEl.textContent = message;
+            if (overlayEl) overlayEl.classList.add('active');
+        };
+
+        window.hideLoader = function() {
+            const overlayEl = document.getElementById('loader-overlay');
+            if (overlayEl) overlayEl.classList.remove('active');
+        };
+    </script>
 </body>
 </html>

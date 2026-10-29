@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>{% block title %}{% endblock %}</title>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@1,700&display=swap"
+        rel="stylesheet">
+
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- CSS linking -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
-
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
-    
+
     <header>
         <nav>
             <a href="/" class="logo">RREBP</a>
-            
-            <div class="nav-menu">
+
+            <button class="mobile-toggle" id="mobile-toggle" aria-label="Open menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="nav-menu" id="nav-menu">
                 <div class="nav-links">
                     <a href="/">Home</a>
                     <a href="/#about">About</a>
@@ -31,7 +39,9 @@
                 </div>
 
                 <div class="nav-actions">
-                    <button class="lang-toggle">EN / RW</button>
+                    <button class="lang-toggle" type="button">
+                        EN / RW
+                    </button>
                     <a href="/login" class="btn-primary">Login</a>
                 </div>
             </div>
@@ -39,17 +49,109 @@
     </header>
 
     <main>
+
+        <!-- Flask flash notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+
+        <div id="toast-container">
+
+            {% for category, message in messages %}
+
+            {% if category == 'success' %}
+            {% set toast_class = 'toast-success' %}
+            {% elif category == 'error' %}
+            {% set toast_class = 'toast-error' %}
+            {% elif category == 'warning' %}
+            {% set toast_class = 'toast-warning' %}
+            {% else %}
+            {% set toast_class = 'toast-info' %}
+            {% endif %}
+
+            <div class="toast-alert {{ toast_class }}">
+                <span class="toast-message">
+                    {{ message }}
+                </span>
+
+                <button type="button" class="toast-close" aria-label="Dismiss notification"
+                    onclick="this.closest('.toast-alert').remove()">
+                    &times;
+                </button>
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
+
     </main>
 
     <footer class="site-footer">
-        <p>&copy; 2026 Rwanda Real Estate Brokers Platform (RREBP). All rights reserved.</p>
         <p>
-            <a href="/terms">Terms of Service</a> | 
-            <a href="/privacy">Privacy Policy</a> | 
+            &copy; 2026 Rwanda Real Estate Brokers Platform (RREBP).
+            All rights reserved.
+        </p>
+
+        <p>
+            <a href="/terms">Terms of Service</a> |
+            <a href="/privacy">Privacy Policy</a> |
             <a href="/contact">Contact</a>
         </p>
     </footer>
 
+    <!-- Toast notification behavior -->
+    <script>
+        // ---Flash Message Auto-Dismiss ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const toasts = document.querySelectorAll('.toast-alert');
+
+            toasts.forEach((toast) => {
+                const dismissToast = () => {
+                    if (!toast.isConnected) return;
+                    toast.classList.add('toast-hiding');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500);
+                };
+
+                const timer = setTimeout(dismissToast, 4000);
+                const closeButton = toast.querySelector('.toast-close');
+
+                if (closeButton) {
+                    closeButton.addEventListener('click', () => {
+                        clearTimeout(timer);
+                        dismissToast(); // Instantly hides it when clicked
+                    });
+                }
+            });
+        });
+
+        // --- Mobile Navigation Toggle Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileToggle = document.getElementById('mobile-toggle');
+            const navMenu = document.getElementById('nav-menu');
+            const toggleIcon = mobileToggle ? mobileToggle.querySelector('i') : null;
+
+            if (mobileToggle && navMenu) {
+                mobileToggle.addEventListener('click', () => {
+                    navMenu.classList.toggle('active');
+
+                    if (navMenu.classList.contains('active')) {
+                        toggleIcon.classList.remove('fa-bars');
+                        toggleIcon.classList.add('fa-xmark');
+                    } else {
+                        toggleIcon.classList.remove('fa-xmark');
+                        toggleIcon.classList.add('fa-bars');
+                    }
+                });
+            }
+        });
+    </script>
+
 </body>
+
 </html>

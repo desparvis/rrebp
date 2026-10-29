@@ -1,0 +1,64 @@
+{% extends "assoc_base.html" %}
+{% block title %}Review Application | Organization{% endblock %}
+
+{% block content %}
+<div class="admin-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Review Application</h1>
+    <a href="{{ url_for('association.brokers') }}" style="color: #6B7280; text-decoration: none; font-weight: 500;">
+        &larr; Back to Brokers
+    </a>
+</div>
+
+<div style="background-color: white; border-radius: 8px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 800px; margin-top: 1rem;">
+    
+    <div style="border-bottom: 1px solid #E5E7EB; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; color: #111827; font-size: 1.5rem;">{{ broker.full_name }}</h2>
+        <p style="margin: 0.5rem 0 0 0; color: #6B7280; font-size: 1rem;">
+            {{ broker.professional_title if broker.professional_title else 'Real Estate Broker' }}
+        </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+            <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">Email Address</span>
+            <strong style="color: #111827;">{{ broker.email }}</strong>
+        </div>
+        <div>
+            <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">Phone Number</span>
+            <strong style="color: #111827;">{{ broker.phone }}</strong>
+        </div>
+        <div>
+            <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">License Number</span>
+            <strong style="color: #111827;">{{ broker.license_number }}</strong>
+        </div>
+        <div>
+            <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">Application Date</span>
+            <strong style="color: #111827;">{{ broker.created_at.strftime('%B %d, %Y') }}</strong>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.5rem;">Professional Bio</span>
+        <div style="background-color: #F9FAFB; padding: 1rem; border-radius: 4px; border: 1px solid #E5E7EB; color: #374151; line-height: 1.5;">
+            {{ broker.bio if broker.bio else 'No professional bio provided by the applicant.' }}
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem; border-top: 1px solid #E5E7EB; padding-top: 1.5rem;">
+        <!-- Approve Button -->
+        <form action="/assocdash/brokers/{{ broker.id }}/approve" method="POST" style="margin: 0;">
+            <button type="submit" style="background-color: #059669; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500;">
+                <i class="fa-solid fa-check" style="margin-right: 0.5rem;"></i> Approve Application
+            </button>
+        </form>
+
+        <!-- Reject Button -->
+        <form action="/assocdash/brokers/{{ broker.id }}/reject" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reject this application? This will delete their data permanently.');">
+            <button type="submit" style="background-color: white; color: #DC2626; border: 1px solid #DC2626; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500;">
+                <i class="fa-solid fa-xmark" style="margin-right: 0.5rem;"></i> Reject
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

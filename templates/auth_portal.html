@@ -6,29 +6,60 @@
 <!-- Link to the specific CSS for this page -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth_portal.css') }}">
 
+<style>
+    /* Flash message styling */
+    .flash-msg {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+    }
+
+    .flash-msg.error {
+        background-color: #FEF2F2;
+        color: #991B1B;
+    }
+
+    .flash-msg.success {
+        background-color: #D1FAE5;
+        color: #065F46;
+    }
+
+    .flash-msg.warning {
+        background-color: #FFFBEB;
+        color: #92400E;
+    }
+
+    .flash-msg.info {
+        background-color: #EFF6FF;
+        color: #1E40AF;
+    }
+</style>
+
 <div class="auth-container">
     <div class="auth-card">
-        
+
         <!-- Tabs -->
         <div class="auth-tabs">
             <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
-            <div class="auth-tab" onclick="switchTab('register')">Register / Apply</div>
+            <div class="auth-tab" onclick="switchTab('register')">Apply / Register</div>
         </div>
 
         <div class="auth-body">
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages() %}
-              {% if messages %}
-                {% for message in messages %}
-                  <div class="flash-msg">{{ message }}</div>
-                {% endfor %}
-              {% endif %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-msg {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
             {% endwith %}
 
-            <!-- LOGIN FORM -->
+
+            <!-- Login Form -->
             <form action="/login" method="POST" id="loginForm" class="auth-form active">
                 <input type="hidden" name="form_type" value="login">
-                
+
                 <div class="form-group">
                     <label for="login_role">I am logging in as:</label>
                     <select id="login_role" name="role" required>
@@ -44,18 +75,25 @@
 
                 <div class="form-group">
                     <label for="login_password">Password</label>
-                    <input type="password" id="login_password" name="password" required>
+                    <div style="position: relative;">
+                        <input type="password" id="login_password" name="password" required
+                            style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+                        <i class="fa-solid fa-eye" onclick="togglePassword('login_password', this)"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6B7280;"></i>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn-primary" style="padding: 0.85rem; font-size: 1rem;">Sign In</button>
+                <button type="submit" class="btn-primary" style="padding: 0.85rem; font-size: 1rem; width: 100%;">
+                    Sign In
+                </button>
             </form>
 
-            <!-- REGISTER FORM -->
-            <form action="/login" method="POST" id="registerForm" class="auth-form">
+            <!-- Registration form -->
+            <form action="/apply" method="POST" id="registerForm" class="auth-form">
                 <input type="hidden" name="form_type" value="register">
 
                 <div class="form-group">
-                    <label for="register_role">I want to register as:</label>
+                    <label for="register_role">I want to apply/register as:</label>
                     <select id="register_role" name="role" onchange="toggleRegistrationFields()" required>
                         <option value="broker">Real Estate Broker</option>
                         <option value="association">Association Admin</option>
@@ -64,7 +102,7 @@
 
                 <div class="form-group">
                     <label for="register_name">Full Name</label>
-                    <input type="text" id="register_name" name="name" required>
+                    <input type="text" id="register_name" name="full_name" required>
                 </div>
 
                 <div class="form-group">
@@ -72,25 +110,83 @@
                     <input type="email" id="register_email" name="email" required>
                 </div>
 
-                <!-- Dynamic Field: Shows only for Brokers -->
-                <div class="form-group" id="broker_field">
-                    <label for="license_number">Broker License Number</label>
-                    <input type="text" id="license_number" name="license_number">
+                <!-- Broker information -->
+                <div id="broker_fields" style="display: flex; flex-direction: column; gap: 1rem;">
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span style="color: red;">*</span></label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="license_number">License Number <span style="color: red;">*</span></label>
+                        <input type="text" id="license_number" name="license_number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="organization_id">Select Your Organization <span style="color: red;">*</span></label>
+                        <select id="organization_id" name="organization_id">
+                            <option value="" disabled selected>-- Choose Organization --</option>
+                            {% if not broker_ready_orgs %}
+                            <option value="" disabled> No organizations are currently accepting applications.</option>
+                            {% else %}
+                            {% for org in broker_ready_orgs %}
+                            <option value="{{ org.id }}">{{ org.name }}</option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="professional_title">Professional Title (Optional)</label>
+                        <input type="text" id="professional_title" name="professional_title"
+                            placeholder="e.g. Senior Property Consultant">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bio">Professional Bio (Optional)</label>
+                        <textarea id="bio" name="bio" rows="3"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; font-family: inherit;"></textarea>
+                    </div>
                 </div>
 
-                <!-- Dynamic Field: Shows only for Associations -->
-                <div class="form-group" id="association_field" style="display: none;">
-                    <label for="association_name">Association / Organization Name</label>
-                    <input type="text" id="association_name" name="association_name">
+
+                <!-- ASSOCIATION SPECIFIC FIELDS                    -->
+                <div id="association_fields" style="display: none; flex-direction: column; gap: 1rem;">
+
+                    <div class="form-group">
+                        <!-- THE FIX: Changed from text input to an organization dropdown! -->
+                        <label for="association_name">Select Association / Organization</label>
+                        <select id="association_name" name="organization_id">
+                            <option value="" disabled selected>-- Choose Association --</option>
+                            {% if not all_active_orgs %}
+                            <option value="" disabled> No organizations have been created by the Super Admin yet.
+                            </option>
+                            {% else %}
+                            {% for org in all_active_orgs %}
+                            <option value="{{ org.id }}">{{ org.name }}</option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" style="margin-top: 1rem;">
                     <label for="register_password">Create Password</label>
-                    <input type="password" id="register_password" name="password" required>
+                    <div style="position: relative;">
+                        <input type="password" id="register_password" name="password" required
+                            style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+                        <i class="fa-solid fa-eye" onclick="togglePassword('register_password', this)"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6B7280;"></i>
+                    </div>
                 </div>
 
-                <button type="submit" class="btn-primary" style="padding: 0.85rem; font-size: 1rem;">Submit Application</button>
+                <button type="submit" class="btn-primary"
+                    style="padding: 0.85rem; font-size: 1rem; width: 100%; margin-top: 1rem;">
+                    Submit Application
+                </button>
             </form>
+
         </div>
     </div>
 </div>
@@ -99,8 +195,13 @@
     // Switches between Login and Register Tabs
     function switchTab(tabName) {
         // Reset tabs
-        document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+        document.querySelectorAll('.auth-tab').forEach(tab =>
+            tab.classList.remove('active')
+        );
+
+        document.querySelectorAll('.auth-form').forEach(form =>
+            form.classList.remove('active')
+        );
 
         // Activate selected tab
         if (tabName === 'login') {
@@ -112,19 +213,66 @@
         }
     }
 
-    // Dynamically shows/hides fields based on the chosen role during registration
+    // Dynamically shows/hides fields based on the chosen registration role
     function toggleRegistrationFields() {
         const role = document.getElementById('register_role').value;
-        const brokerField = document.getElementById('broker_field');
-        const assocField = document.getElementById('association_field');
+        const brokerFields = document.getElementById('broker_fields');
+        const assocFields = document.getElementById('association_fields');
+
+        // Required attribute toggling to prevent form submission errors
+        const brokerInputs = brokerFields.querySelectorAll(
+            'input[type="text"], input[type="tel"], select'
+        );
+
+        // Include select in the query so our new dropdown gets handled
+        const assocInputs = assocFields.querySelectorAll('input, select');
 
         if (role === 'broker') {
-            brokerField.style.display = 'flex';
-            assocField.style.display = 'none';
+            brokerFields.style.display = 'flex';
+            assocFields.style.display = 'none';
+
+            brokerInputs.forEach(input => {
+                if (
+                    input.name === 'phone' ||
+                    input.name === 'license_number' ||
+                    input.name === 'organization_id'
+                ) {
+                    input.required = true;
+                }
+            });
+
+            assocInputs.forEach(input => {
+                input.required = false;
+            });
+
         } else {
-            brokerField.style.display = 'none';
-            assocField.style.display = 'flex';
+            brokerFields.style.display = 'none';
+            assocFields.style.display = 'flex';
+
+            brokerInputs.forEach(input => {
+                input.required = false;
+            });
+
+            // Association dropdown is required for association applications
+            document.getElementById('association_name').required = true;
         }
     }
+
+    // Toggles password visibility (Eye Icon)
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Run once on load to ensure the correct fields are required
+    toggleRegistrationFields();
 </script>
 {% endblock %}

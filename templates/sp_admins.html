@@ -1,80 +1,221 @@
 {% extends "sp_base.html" %}
-
-{% block title %}Manage Admins | Super Admin{% endblock %}
+{% block title %}Manage Association Admins | Super Admin{% endblock %}
 
 {% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="application/javascript"></script>
+
 <style>
-    /* Same table styles as organizations */
-    .data-table { width: 100%; border-collapse: collapse; background-color: var(--bg-white); border: 1px solid var(--border-grey); border-radius: 6px; overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; background-color: var(--bg-white); border: 1px solid var(--border-grey); border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-grey); }
     .data-table th { background-color: #F9FAFB; font-weight: 600; color: var(--text-dark); text-transform: uppercase; font-size: 0.85rem; }
     
-    .status-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; }
-    .status-pending { background-color: #FEF3C7; color: #92400E; }
-    .status-active { background-color: #D1FAE5; color: #065F46; }
-    .status-revoked { background-color: #FEE2E2; color: #991B1B; }
+    .status-badge { padding: 0.35rem 0.65rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+    .status-pending { background-color: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+    .status-active { background-color: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
+    .status-revoked { background-color: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
     
-    .btn-approve { background-color: #10B981; color: white; padding: 0.4rem 0.75rem; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; }
-    .btn-revoke { background-color: #EF4444; color: white; padding: 0.4rem 0.75rem; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; }
+    /* Clean text buttons based on your inspiration */
+    .btn-approve { background-color: #10B981; color: white; padding: 0.5rem 0.85rem; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background-color 0.2s; }
+    .btn-approve:hover { background-color: #059669; }
+    
+    .btn-revoke { background-color: #EF4444; color: white; padding: 0.5rem 0.85rem; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background-color 0.2s; }
+    .btn-revoke:hover { background-color: #DC2626; }
+
+    .btn-web3 { background-color: #0A66C2; color: white; padding: 0.5rem 0.85rem; border-radius: 4px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background-color 0.2s; }
+    .btn-web3:hover:not(:disabled) { background-color: #004182; }
+    .btn-web3:disabled { cursor: default; opacity: 1; }
 </style>
 
 <div class="admin-header">
-    <h1>Association Admins</h1>
+    <div>
+        <h1>Association Admins</h1>
+        <p style="color: var(--text-muted); margin-top: 0.25rem;">Manage database access and authorize wallets on the blockchain.</p>
+    </div>
 </div>
 
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        {% for message in messages %}
-            <div style="background-color: #EFF6FF; color: #1D4ED8; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
+<div class="table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Admin Profile</th>
+                <th>Organization</th>
+                <th>Platform Access</th>
+                <th>Connected Wallet</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for admin in admins %}
+            <tr class="admin-row" data-wallet="{{ admin.wallet_address or '' }}">
+                <td>
+                    <strong>{{ admin.full_name }}</strong><br>
+                    <span style="font-size: 0.85rem; color: #6B7280;">{{ admin.email }}</span>
+                </td>
+                
+                <td>{{ admin.organization.name if admin.organization else 'N/A' }}</td>
+                
+                <td>
+                    <span class="status-badge 
+                        {% if admin.account_status == 'Pending' %}status-pending
+                        {% elif admin.account_status == 'Active' %}status-active
+                        {% else %}status-revoked{% endif %}">
+                        {{ admin.account_status }}
+                    </span>
+                </td>
 
-<table class="data-table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Organization</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for admin in admins %}
-        <tr>
-            <td><strong>{{ admin.full_name }}</strong></td>
-            <td>{{ admin.email }}</td>
-            <td>{{ admin.organization.name }}</td>
-            <td>
-                <span class="status-badge 
-                    {% if admin.account_status == 'Pending' %}status-pending
-                    {% elif admin.account_status == 'Active' %}status-active
-                    {% else %}status-revoked{% endif %}">
-                    {{ admin.account_status }}
-                </span>
-            </td>
-            <td>
-                <div style="display: flex; gap: 0.5rem;">
-                    {% if admin.account_status == 'Pending' or admin.account_status == 'Revoked' %}
-                    <form action="{{ url_for('superadmin.approve_admin', admin_id=admin.id) }}" method="POST">
-                        <button type="submit" class="btn-approve">Approve</button>
-                    </form>
+                <td>
+                    {% if admin.wallet_address %}
+                        <span style="font-family: monospace; color: #059669; font-size: 0.9rem; font-weight: 500;">
+                            <i class="fa-solid fa-link"></i> {{ admin.wallet_address[0:6] }}...{{ admin.wallet_address[-4:] }}
+                        </span>
+                    {% else %}
+                        <span style="color: #DC2626; font-size: 0.85rem; font-weight: 500;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Not Linked
+                        </span>
                     {% endif %}
+                </td>
+                
+                <td>
+                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                        
+                        <!-- 1. Database Access Buttons -->
+                        {% if admin.account_status == 'Pending' or admin.account_status == 'Revoked' %}
+                        <form action="{{ url_for('superadmin.approve_admin', admin_id=admin.id) }}" method="POST" style="margin:0;">
+                            <button type="submit" class="btn-approve">Approve Access</button>
+                        </form>
+                        {% endif %}
+                        
+                        {% if admin.account_status == 'Active' or admin.account_status == 'Pending' %}
+                        <form action="{{ url_for('superadmin.revoke_admin', admin_id=admin.id) }}" method="POST" onsubmit="return confirm('Revoke this admin\'s database access?');" style="margin:0;">
+                            <button type="submit" class="btn-revoke">Revoke Access</button>
+                        </form>
+                        {% endif %}
+
+                        <!-- 2. Blockchain Auth Button (Dynamically managed by JS) -->
+                        {% if admin.wallet_address %}
+                            <button class="btn-web3 auth-btn" disabled>
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> Checking Chain...
+                            </button>
+                        {% else %}
+                            <span style="font-size: 0.85rem; color: #9CA3AF; padding: 0.5rem;">Awaiting Wallet</span>
+                        {% endif %}
+
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="padding: 3rem; text-align: center; color: #6B7280;">No association admins registered yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const contractAddress = "0xfAF6FA9F4fFE82bE38e10E68661945383445cA7C";
+    const abi = [
+        "function authorizedAssociations(address) public view returns (bool)",
+        "function addAssociation(address _adminWallet) public"
+    ];
+
+    // 1. Check Blockchain Status on Page Load
+    async function checkBlockchainStatuses() {
+        // Use a public RPC just to read data (no MetaMask popup required for this)
+        const rpcUrl = "https://ethereum-sepolia-rpc.publicnode.com";
+        const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+        const contract = new ethers.Contract(contractAddress, abi, provider);
+
+        const rows = document.querySelectorAll('.admin-row');
+        
+        for (let row of rows) {
+            const wallet = row.getAttribute('data-wallet');
+            const btn = row.querySelector('.auth-btn');
+            
+            if (wallet && btn) {
+                try {
+                    // Ask the smart contract: Is this wallet authorized?
+                    const isAuthorized = await contract.authorizedAssociations(wallet);
                     
-                    {% if admin.account_status == 'Active' or admin.account_status == 'Pending' %}
-                    <form action="{{ url_for('superadmin.revoke_admin', admin_id=admin.id) }}" method="POST" onsubmit="return confirm('Revoke this admin access?');">
-                        <button type="submit" class="btn-revoke">Revoke</button>
-                    </form>
-                    {% endif %}
+                    if (isAuthorized) {
+                        // Change to a green, disabled "Authorized" badge
+                        btn.innerHTML = '<i class="fa-solid fa-shield-check"></i> On-Chain Authorized';
+                        btn.style.backgroundColor = '#D1FAE5';
+                        btn.style.color = '#065F46';
+                        btn.style.border = '1px solid #34D399';
+                        btn.disabled = true;
+                    } else {
+                        // Change to the active, clickable authorization button
+                        btn.innerHTML = '<i class="fa-solid fa-link"></i> Authorize on Blockchain';
+                        btn.disabled = false;
+                        btn.onclick = () => authorizeWallet(wallet, btn);
+                    }
+                } catch (error) {
+                    console.error("Failed to check wallet:", wallet, error);
+                    btn.innerHTML = '<i class="fa-solid fa-wifi"></i> Check Failed';
+                }
+            }
+        }
+    }
+
+    // 2. Perform the MetaMask Authorization
+    async function authorizeWallet(walletAddress, btnElement) {
+        if (typeof window.ethereum === 'undefined') {
+            showLoader("Please install MetaMask to authorize wallets!");
+            setTimeout(hideLoader, 3000);
+            return;
+        }
+
+        try {
+            showLoader("Connecting to Super Admin MetaMask...");
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            
+            // Re-initialize with the user's actual wallet to sign the transaction
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const contract = new ethers.Contract(contractAddress, abi, signer);
+
+            showLoader("Please confirm authorization in MetaMask...");
+            const tx = await contract.addAssociation(walletAddress);
+
+            showLoader("Transaction sent! Writing authorization to the blockchain...");
+            await tx.wait(); // Wait for block confirmation
+
+            hideLoader();
+            
+            // Instantly update the UI to show success without reloading the page
+            btnElement.innerHTML = '<i class="fa-solid fa-shield-check"></i> On-Chain Authorized';
+            btnElement.style.backgroundColor = '#D1FAE5';
+            btnElement.style.color = '#065F46';
+            btnElement.style.border = '1px solid #34D399';
+            btnElement.disabled = true;
+
+            // Trigger the success toast
+            const toastContainer = document.getElementById('toast-container') || (() => {
+                const c = document.createElement('div');
+                c.id = 'toast-container';
+                document.querySelector('.admin-main').prepend(c);
+                return c;
+            })();
+            toastContainer.innerHTML += `
+                <div class="toast-alert toast-success">
+                    <span class="toast-message">Success! Wallet authorized on blockchain.</span>
+                    <button type="button" class="toast-close" onclick="this.closest('.toast-alert').remove()">&times;</button>
                 </div>
-            </td>
-        </tr>
-        {% else %}
-        <tr>
-            <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">No admins registered yet.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+            `;
+            
+        } catch (error) {
+            console.error("Blockchain error:", error);
+            hideLoader();
+            if (error.message.includes("Only the Super Admin")) {
+                alert("Error: You are not logged into MetaMask with the Super Admin deployer wallet!");
+            } else {
+                alert("Transaction failed. Check console for details.");
+            }
+        }
+    }
+
+    // Run the checker as soon as the page loads
+    document.addEventListener('DOMContentLoaded', checkBlockchainStatuses);
+</script>
 {% endblock %}
