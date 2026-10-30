@@ -13,26 +13,10 @@
         margin-bottom: 1rem;
         border-radius: 4px;
     }
-
-    .flash-msg.error {
-        background-color: #FEF2F2;
-        color: #991B1B;
-    }
-
-    .flash-msg.success {
-        background-color: #D1FAE5;
-        color: #065F46;
-    }
-
-    .flash-msg.warning {
-        background-color: #FFFBEB;
-        color: #92400E;
-    }
-
-    .flash-msg.info {
-        background-color: #EFF6FF;
-        color: #1E40AF;
-    }
+    .flash-msg.error { background-color: #FEF2F2; color: #991B1B; }
+    .flash-msg.success { background-color: #D1FAE5; color: #065F46; }
+    .flash-msg.warning { background-color: #FFFBEB; color: #92400E; }
+    .flash-msg.info { background-color: #EFF6FF; color: #1E40AF; }
 </style>
 
 <div class="auth-container">
@@ -54,7 +38,6 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-
 
             <!-- Login Form -->
             <form action="/login" method="POST" id="loginForm" class="auth-form active">
@@ -119,11 +102,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="license_number">License Number <span style="color: red;">*</span></label>
-                        <input type="text" id="license_number" name="license_number">
-                    </div>
-
-                    <div class="form-group">
                         <label for="organization_id">Select Your Organization <span style="color: red;">*</span></label>
                         <select id="organization_id" name="organization_id">
                             <option value="" disabled selected>-- Choose Organization --</option>
@@ -138,9 +116,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="professional_title">Professional Title (Optional)</label>
-                        <input type="text" id="professional_title" name="professional_title"
-                            placeholder="e.g. Senior Property Consultant">
+                        <label for="professional_title">Professional Title <span style="color: red;">*</span></label>
+                        <select id="professional_title" name="professional_title">
+                            <option value="" disabled selected>-- Choose Title --</option>
+                            <option value="Junior Broker">Junior Broker</option>
+                            <option value="Real Estate Broker">Real Estate Broker</option>
+                            <option value="Senior Broker">Senior Broker</option>
+                            <option value="Property Consultant">Property Consultant</option>
+                            <option value="Managing Broker">Managing Broker</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -150,18 +134,14 @@
                     </div>
                 </div>
 
-
-                <!-- ASSOCIATION SPECIFIC FIELDS                    -->
+                <!-- ASSOCIATION SPECIFIC FIELDS -->
                 <div id="association_fields" style="display: none; flex-direction: column; gap: 1rem;">
-
                     <div class="form-group">
-                        <!-- THE FIX: Changed from text input to an organization dropdown! -->
                         <label for="association_name">Select Association / Organization</label>
                         <select id="association_name" name="organization_id">
                             <option value="" disabled selected>-- Choose Association --</option>
                             {% if not all_active_orgs %}
-                            <option value="" disabled> No organizations have been created by the Super Admin yet.
-                            </option>
+                            <option value="" disabled> No organizations have been created by the Super Admin yet.</option>
                             {% else %}
                             {% for org in all_active_orgs %}
                             <option value="{{ org.id }}">{{ org.name }}</option>
@@ -192,18 +172,10 @@
 </div>
 
 <script>
-    // Switches between Login and Register Tabs
     function switchTab(tabName) {
-        // Reset tabs
-        document.querySelectorAll('.auth-tab').forEach(tab =>
-            tab.classList.remove('active')
-        );
+        document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
 
-        document.querySelectorAll('.auth-form').forEach(form =>
-            form.classList.remove('active')
-        );
-
-        // Activate selected tab
         if (tabName === 'login') {
             document.querySelectorAll('.auth-tab')[0].classList.add('active');
             document.getElementById('loginForm').classList.add('active');
@@ -213,18 +185,12 @@
         }
     }
 
-    // Dynamically shows/hides fields based on the chosen registration role
     function toggleRegistrationFields() {
         const role = document.getElementById('register_role').value;
         const brokerFields = document.getElementById('broker_fields');
         const assocFields = document.getElementById('association_fields');
 
-        // Required attribute toggling to prevent form submission errors
-        const brokerInputs = brokerFields.querySelectorAll(
-            'input[type="text"], input[type="tel"], select'
-        );
-
-        // Include select in the query so our new dropdown gets handled
+        const brokerInputs = brokerFields.querySelectorAll('input[type="text"], input[type="tel"], select, textarea');
         const assocInputs = assocFields.querySelectorAll('input, select');
 
         if (role === 'broker') {
@@ -232,33 +198,25 @@
             assocFields.style.display = 'none';
 
             brokerInputs.forEach(input => {
-                if (
-                    input.name === 'phone' ||
-                    input.name === 'license_number' ||
-                    input.name === 'organization_id'
-                ) {
+                // Bio is strictly excluded from being required
+                if (input.name === 'phone' || input.name === 'organization_id' || input.name === 'professional_title') {
                     input.required = true;
+                } else {
+                    input.required = false; // Bio
                 }
             });
 
-            assocInputs.forEach(input => {
-                input.required = false;
-            });
+            assocInputs.forEach(input => input.required = false);
 
         } else {
             brokerFields.style.display = 'none';
             assocFields.style.display = 'flex';
 
-            brokerInputs.forEach(input => {
-                input.required = false;
-            });
-
-            // Association dropdown is required for association applications
+            brokerInputs.forEach(input => input.required = false);
             document.getElementById('association_name').required = true;
         }
     }
 
-    // Toggles password visibility (Eye Icon)
     function togglePassword(inputId, icon) {
         const input = document.getElementById(inputId);
         if (input.type === 'password') {
@@ -272,7 +230,6 @@
         }
     }
 
-    // Run once on load to ensure the correct fields are required
     toggleRegistrationFields();
 </script>
 {% endblock %}

@@ -1,0 +1,109 @@
+{% extends "broker_base.html" %}
+
+{% block title %}Dashboard | Broker Portal{% endblock %}
+
+{% block content %}
+<style>
+    .broker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+    
+    .info-card { background: white; border: 1px solid var(--border-grey); border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .info-card h3 { color: #6B7280; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 0.5rem; }
+    
+    .status-banner { padding: 1rem 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .status-banner.pending { background-color: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
+    .status-banner.approved { background-color: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
+    .status-banner.onchain { background-color: #F0FDF4; border: 1px solid #BBF7D0; color: #166534; }
+    
+    .copy-box { background: #F3F4F6; padding: 0.75rem; border-radius: 4px; font-family: monospace; font-size: 1.1rem; font-weight: bold; color: #111827; display: flex; justify-content: space-between; align-items: center; border: 1px dashed #D1D5DB; }
+    .copy-btn { background: none; border: none; color: #0A66C2; cursor: pointer; font-size: 1rem; }
+    .copy-btn:hover { color: #004182; }
+</style>
+
+<div class="admin-header">
+    <div>
+        <h1>Welcome back, {{ broker.full_name }}</h1>
+        <p style="color: var(--text-muted); margin-top: 0.25rem;">{{ broker.professional_title }}</p>
+    </div>
+</div>
+
+<!-- Dynamic Status Banner -->
+{% if broker.verification_code %}
+    <div class="status-banner onchain">
+        <div>
+            <h3 style="margin-bottom: 0.25rem; font-weight: 700;"><i class="fa-solid fa-shield-check"></i> Verified on Blockchain</h3>
+            <p style="font-size: 0.9rem;">Your professional license is secured and officially verified on the blockchain network.</p>
+        </div>
+    </div>
+{% elif broker.status == 'Active' %}
+    <div class="status-banner approved">
+        <div>
+            <h3 style="margin-bottom: 0.25rem; font-weight: 700;"><i class="fa-solid fa-check-circle"></i> Organization Approved</h3>
+            <p style="font-size: 0.9rem;">Your account is approved. Awaiting admin deployment to the blockchain.</p>
+        </div>
+    </div>
+{% else %}
+    <div class="status-banner pending">
+        <div>
+            <h3 style="margin-bottom: 0.25rem; font-weight: 700;"><i class="fa-solid fa-hourglass-half"></i> Registration Pending</h3>
+            <p style="font-size: 0.9rem;">Your application is currently being reviewed by your organization.</p>
+        </div>
+    </div>
+{% endif %}
+
+<div class="broker-grid">
+    <!-- License & Orgnization Card -->
+    <div class="info-card">
+        <h3>Official Details</h3>
+        <div style="margin-bottom: 1rem;">
+            <p style="font-size: 0.85rem; color: #6B7280; margin-bottom: 0.2rem;">License Number</p>
+            <p style="font-weight: 600; font-family: monospace; font-size: 1.05rem;">{{ broker.license_number }}</p>
+        </div>
+        <div>
+            <p style="font-size: 0.85rem; color: #6B7280; margin-bottom: 0.2rem;">Affiliated Organization</p>
+            <p style="font-weight: 600;"><i class="fa-solid fa-building" style="color: #9CA3AF; margin-right: 0.5rem;"></i>{{ organization.name }}</p>
+            <p style="font-size: 0.85rem; color: #6B7280; margin-top: 0.25rem;">Status: {{ organization.status }}</p>
+        </div>
+    </div>
+
+    <!-- Review Code Card -->
+    <div class="info-card" style="border-top: 4px solid #0A66C2;">
+        <h3>Client Review Code</h3>
+        <p style="font-size: 0.9rem; color: #4B5563; margin-bottom: 1rem;">
+            Share this secure code with your clients so they can leave verified public reviews on your profile.
+        </p>
+        <div class="copy-box">
+            <span id="reviewCodeText">{{ broker.review_code }}</span>
+            <button class="copy-btn" onclick="copyReviewCode()" title="Copy to clipboard">
+                <i class="fa-regular fa-copy"></i>
+            </button>
+        </div>
+        <p id="copy-feedback" style="color: #10B981; font-size: 0.8rem; margin-top: 0.5rem; display: none;">Copied to clipboard!</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="info-card">
+        <h3>Workspace Overview</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #4B5563;"><i class="fa-solid fa-house" style="width: 20px; color: #9CA3AF;"></i> Active Properties</span>
+                <span style="font-weight: 700; font-size: 1.1rem; background: #F3F4F6; padding: 0.25rem 0.75rem; border-radius: 999px;">{{ active_properties }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #4B5563;"><i class="fa-solid fa-star" style="width: 20px; color: #F59E0B;"></i> Pending Reviews</span>
+                <span style="font-weight: 700; font-size: 1.1rem; background: #FEF3C7; color: #92400E; padding: 0.25rem 0.75rem; border-radius: 999px;">{{ pending_reviews }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyReviewCode() {
+        const codeText = document.getElementById('reviewCodeText').innerText;
+        navigator.clipboard.writeText(codeText).then(() => {
+            const feedback = document.getElementById('copy-feedback');
+            feedback.style.display = 'block';
+            setTimeout(() => { feedback.style.display = 'none'; }, 2000);
+        });
+    }
+</script>
+{% endblock %}

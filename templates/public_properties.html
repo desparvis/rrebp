@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Properties | RREBP{% endblock %}
+
+{% block content %}
+<style>
+    .properties-header { text-align: center; padding: 4rem 1rem 2rem; }
+    .properties-header h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: #111827; margin-bottom: 1rem; }
+    .properties-header p { color: #6B7280; font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+    .property-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+    
+    .prop-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #E5E7EB; transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; display: flex; flex-direction: column; }
+    .prop-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    
+    .prop-image { width: 100%; height: 200px; object-fit: cover; background-color: #F3F4F6; }
+    
+    .prop-content { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
+    .prop-type { font-size: 0.8rem; font-weight: 700; color: #0A66C2; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .prop-price { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; font-family: monospace; }
+    .prop-title { font-size: 1.1rem; font-weight: 600; color: #374151; margin-bottom: 1rem; line-height: 1.4; }
+    .prop-location { font-size: 0.9rem; color: #6B7280; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    
+    .prop-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; color: #4B5563; }
+</style>
+
+<div class="properties-header">
+    <h1>Verified Properties</h1>
+    <p>Every listing here has been cryptographically verified and approved by a certified Rwandan real estate association. No scams, no bait-and-switch.</p>
+</div>
+
+<div class="property-grid">
+    {% for property in properties %}
+    <a href="{{ url_for('landing.public_property_detail', property_id=property.id) }}" class="prop-card">
+        {% if property.images %}
+            <img src="{{ property.images[0].image_url }}" alt="Property" class="prop-image">
+        {% else %}
+            <div class="prop-image" style="display:flex; align-items:center; justify-content:center; color:#9CA3AF;"><i class="fa-solid fa-house" style="font-size: 3rem;"></i></div>
+        {% endif %}
+        
+        <div class="prop-content">
+            <div class="prop-type">{{ property.listing_type }}</div>
+            <div class="prop-price">{{ "{:,.0f}".format(property.price) }} RWF</div>
+            <div class="prop-title">{{ property.title }}</div>
+            
+            <div class="prop-location">
+                <i class="fa-solid fa-location-dot"></i> {{ property.location }}
+            </div>
+            
+            <div class="prop-footer">
+                <span><i class="fa-solid fa-shield-check" style="color: #10B981;"></i> Verified Listing</span>
+                <span style="font-weight: 500;">Broker {{ property.broker.full_name.split()[0] }}</span>
+            </div>
+        </div>
+    </a>
+    {% else %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem;">
+        <i class="fa-solid fa-building-circle-xmark" style="font-size: 3rem; color: #9CA3AF; margin-bottom: 1rem;"></i>
+        <h3 style="color: #374151;">No properties available right now</h3>
+        <p style="color: #6B7280;">Our brokers are preparing new verified listings. Check back soon!</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

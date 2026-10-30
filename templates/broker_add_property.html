@@ -1,0 +1,102 @@
+{% extends "broker_base.html" %}
+
+{% block title %}Add Property | Broker Portal{% endblock %}
+
+{% block content %}
+<style>
+    .form-card { background: white; border: 1px solid var(--border-grey); border-radius: 8px; padding: 2rem; max-width: 800px; margin-top: 1.5rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .form-group { display: flex; flex-direction: column; margin-bottom: 1.5rem; }
+    .form-group label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box; }
+    
+    .file-upload-box { border: 2px dashed #D1D5DB; padding: 2rem; text-align: center; border-radius: 8px; background-color: #F9FAFB; transition: border-color 0.2s; }
+    .file-upload-box:hover { border-color: #0A66C2; }
+    .file-upload-box input[type="file"] { display: none; }
+    .custom-file-upload { display: inline-block; padding: 0.5rem 1rem; background-color: white; border: 1px solid #D1D5DB; border-radius: 4px; cursor: pointer; font-weight: 500; color: #374151; margin-top: 1rem; }
+    #file-count { display: block; margin-top: 0.5rem; font-size: 0.85rem; color: #059669; font-weight: 600; }
+</style>
+
+<div class="admin-header">
+    <h1>Add New Property</h1>
+    <a href="{{ url_for('broker.my_properties') }}" class="btn-primary" style="background-color: #6B7280;">Cancel</a>
+</div>
+
+<div class="form-card">
+    <!-- Notice the enctype attribute. This is mandatory for image uploads! -->
+    <form action="{{ url_for('broker.add_property') }}" method="POST" enctype="multipart/form-data" id="propertyForm">
+        
+        <div class="form-group">
+            <label for="title">Listing Title <span style="color: red;">*</span></label>
+            <input type="text" id="title" name="title" placeholder="e.g., Modern 4-Bedroom Villa in Nyarutarama" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="listing_type">Listing Type <span style="color: red;">*</span></label>
+                <select id="listing_type" name="listing_type" required>
+                    <option value="" disabled selected>Select Type</option>
+                    <option value="For Sale">For Sale</option>
+                    <option value="For Rent">For Rent</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="price">Price (RWF) <span style="color: red;">*</span></label>
+                <input type="number" id="price" name="price" placeholder="e.g., 150000000" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="location">Location / Neighborhood <span style="color: red;">*</span></label>
+                <input type="text" id="location" name="location" placeholder="e.g., Kibagabaga, Kigali" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="upi_number">Land UPI Number <span style="color: red;">*</span></label>
+                <input type="text" id="upi_number" name="upi_number" placeholder="e.g., 1/02/03/04/1234" required>
+                <small style="color: #6B7280; margin-top: 0.25rem;">Required for Association verification.</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Property Description <span style="color: red;">*</span></label>
+            <textarea id="description" name="description" rows="5" placeholder="Describe the key features of the property..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Property Images <span style="color: red;">*</span></label>
+            <div class="file-upload-box">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.5rem; color: #9CA3AF;"></i>
+                <p style="margin-top: 1rem; color: #4B5563;">Upload clear, high-quality photos of the property.</p>
+                
+                <label for="images" class="custom-file-upload">
+                    Browse Files
+                </label>
+                <!-- 'multiple' allows selecting multiple photos at once -->
+                <!-- 'accept="image/*"' restricts uploads to images only -->
+                <input type="file" id="images" name="images" multiple accept="image/*" required onchange="updateFileCount()">
+                
+                <span id="file-count"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.05rem;" onclick="showLoader('Uploading images to Cloudinary...')">
+            Submit Property for Verification
+        </button>
+    </form>
+</div>
+
+<script>
+    function updateFileCount() {
+        const input = document.getElementById('images');
+        const countDisplay = document.getElementById('file-count');
+        
+        if (input.files && input.files.length > 0) {
+            const count = input.files.length;
+            countDisplay.innerHTML = `<i class="fa-solid fa-check"></i> ${count} file(s) selected ready for upload`;
+        } else {
+            countDisplay.innerText = '';
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "assoc_base.html" %}
+
+{% block title %}Review Property | Association Portal{% endblock %}
+
+{% block content %}
+<style>
+    .review-card { background: white; border: 1px solid var(--border-grey); border-radius: 8px; padding: 2rem; margin-top: 1.5rem; }
+    
+    /* Image Grid */
+    .image-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .image-wrapper { border-radius: 6px; overflow: hidden; border: 1px solid #E5E7EB; aspect-ratio: 4/3; }
+    .image-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .image-wrapper img:hover { transform: scale(1.05); }
+
+    /* Property Details */
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; background-color: #F9FAFB; padding: 1.5rem; border-radius: 8px; border: 1px solid #E5E7EB; }
+    .detail-group { margin-bottom: 1rem; }
+    .detail-label { display: block; font-size: 0.85rem; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .detail-value { font-size: 1.05rem; color: #111827; font-weight: 500; }
+    
+    .description-box { margin-bottom: 2rem; line-height: 1.6; color: #374151; font-size: 1rem; padding-top: 1.5rem; border-top: 1px solid #E5E7EB; }
+
+    /* Action Bar */
+    .action-bar { display: flex; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid #E5E7EB; }
+    .btn-approve { flex: 1; background-color: #10B981; color: white; border: none; padding: 1rem; border-radius: 6px; cursor: pointer; font-size: 1.05rem; font-weight: 600; text-align: center; }
+    .btn-approve:hover { background-color: #059669; }
+    .btn-reject { flex: 1; background-color: #EF4444; color: white; border: none; padding: 1rem; border-radius: 6px; cursor: pointer; font-size: 1.05rem; font-weight: 600; text-align: center; }
+    .btn-reject:hover { background-color: #DC2626; }
+    
+    .badge { padding: 0.35rem 1rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; display: inline-block; }
+    .badge.pending { background-color: #FEF3C7; color: #92400E; }
+    .badge.verified { background-color: #D1FAE5; color: #065F46; }
+    .badge.rejected { background-color: #FEE2E2; color: #991B1B; }
+</style>
+
+<div class="admin-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <a href="{{ url_for('association.manage_properties') }}" style="color: #6B7280; text-decoration: none; font-size: 0.9rem; display: inline-block; margin-bottom: 0.5rem;"><i class="fa-solid fa-arrow-left"></i> Back to Properties</a>
+        <h1 style="margin: 0; font-size: 1.75rem;">{{ property.title }}</h1>
+        <p style="color: var(--text-muted); margin-top: 0.25rem;">Uploaded by Broker <strong>{{ property.broker.full_name }}</strong> ({{ property.broker.license_number }})</p>
+    </div>
+    
+    <span class="badge {{ property.verification_status|lower }}">{{ property.verification_status }}</span>
+</div>
+
+<div class="review-card">
+    
+    <!-- Photos -->
+    <h3 style="font-size: 1.1rem; color: #374151; margin-bottom: 1rem;">Property Photos</h3>
+    <div class="image-gallery">
+        {% for image in property.images %}
+            <div class="image-wrapper">
+                <a href="{{ image.image_url }}" target="_blank" title="Click to view full size">
+                    <img src="{{ image.image_url }}" alt="Property Image">
+                </a>
+            </div>
+        {% else %}
+            <p style="color: #6B7280; font-size: 0.9rem; grid-column: 1 / -1; padding: 2rem; background: #F9FAFB; text-align: center; border-radius: 6px;">No photos uploaded.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Data Grid -->
+    <div class="details-grid">
+        <div>
+            <div class="detail-group">
+                <span class="detail-label">Listing Type</span>
+                <span class="detail-value">{{ property.listing_type }}</span>
+            </div>
+            <div class="detail-group">
+                <span class="detail-label">Price</span>
+                <span class="detail-value" style="font-family: monospace; font-size: 1.15rem; color: #059669;">{{ "{:,.0f}".format(property.price) }} RWF</span>
+            </div>
+        </div>
+        <div>
+            <div class="detail-group">
+                <span class="detail-label">Location / Neighborhood</span>
+                <span class="detail-value">{{ property.location }}</span>
+            </div>
+            <div class="detail-group">
+                <span class="detail-label">Land UPI Number</span>
+                <span class="detail-value" style="font-family: monospace; font-size: 1.15rem; color: #0A66C2;">{{ property.upi_number or 'Not Provided' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="description-box">
+        <span class="detail-label">Property Description</span>
+        {{ property.description }}
+    </div>
+
+    <!-- Action Bar (Only show if Pending) -->
+    {% if property.verification_status == 'Pending' %}
+    <div class="action-bar">
+        <form action="{{ url_for('association.approve_property', property_id=property.id) }}" method="POST" style="flex: 1;" onsubmit="return confirm('Are you sure you want to Approve this property? It will become visible to the public.');">
+            <button type="submit" class="btn-approve"><i class="fa-solid fa-check-circle"></i> Approve Listing</button>
+        </form>
+        
+        <form action="{{ url_for('association.reject_property', property_id=property.id) }}" method="POST" style="flex: 1;" onsubmit="return confirm('Are you sure you want to Reject this property? The broker will need to edit and resubmit.');">
+            <button type="submit" class="btn-reject"><i class="fa-solid fa-xmark-circle"></i> Reject Listing</button>
+        </form>
+    </div>
+    {% else %}
+    <div style="padding-top: 1.5rem; border-top: 1px solid #E5E7EB; text-align: center; color: #6B7280;">
+        <i class="fa-solid fa-info-circle"></i> This property has already been reviewed (Currently: <strong>{{ property.verification_status }}</strong>)
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

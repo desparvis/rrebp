@@ -3,6 +3,7 @@ from werkzeug.security import check_password_hash
 from functools import wraps
 from models import db, SuperAdmin, Organization, AssociationAdmin
 from datetime import datetime, timezone
+import random  # Added for auto-generation
 
 # Setting the superadmin blueprint
 superadmin = Blueprint('superadmin', __name__, template_folder="templates", static_folder="static")
@@ -18,7 +19,6 @@ def login_required(f):
 
 @superadmin.route('/spdash/login', methods=['GET', 'POST'])
 def login():
-    # Bypass login if the session already exists
     if 'superadmin_id' in session:
         return redirect(url_for('superadmin.spdash'))
 
@@ -26,10 +26,8 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        # Query the database for the admin
         admin = SuperAdmin.query.filter_by(email=email).first()
         
-        # Validate credentials
         if admin and check_password_hash(admin.password_hash, password):
             session['superadmin_id'] = admin.id
             return redirect(url_for('superadmin.spdash'))
@@ -40,23 +38,16 @@ def login():
 
 @superadmin.route('/spdash/logout')
 def logout():
-    # Destroy the session
     session.pop('superadmin_id', None)
     return redirect(url_for('superadmin.login'))
 
 @superadmin.route('/spdash')
 @login_required
 def spdash():
-    # 1. Count active organizations
     active_orgs = Organization.query.filter_by(status='Active').count()
-    
-    # 2. Count all registered association admins
     total_admins = AssociationAdmin.query.count()
-    
-    # 3. Count suspended organizations
     suspended_orgs = Organization.query.filter_by(status='Suspended').count()
     
-    # Pass the variables to the template
     return render_template("sp_dashboard.html", 
                            active_orgs=active_orgs, 
                            total_admins=total_admins, 
@@ -65,7 +56,6 @@ def spdash():
 @superadmin.route('/spdash/organizations')
 @login_required
 def organizations():
-    # Fetch all organizations from the database
     orgs = Organization.query.order_by(Organization.created_at.desc()).all()
     return render_template("sp_organizations.html", organizations=orgs)
 
@@ -74,15 +64,26 @@ def organizations():
 def new_organization():
     if request.method == 'POST':
         name = request.form.get('name')
-        reg_number = request.form.get('registration_number')
         email = request.form.get('email')
         phone = request.form.get('phone')
         address = request.form.get('address')
         
-        # Create new organization linked to the logged-in super admin
+        # --- THE FIX: Auto-Generate Registration Number ---
+        # Get first 3 letters, uppercase. If name is shorter than 3, just use what exists.
+        name_prefix = name[:3].upper() if name else "ORG"
+        
+        while True:
+            # Generate 6 random digits
+            random_digits = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+            generated_reg_num = f"RREBP-{random_digits}-{name_prefix}"
+            
+            # Ensure 100% uniqueness in the database
+            if not Organization.query.filter_by(registration_number=generated_reg_num).first():
+                break
+
         new_org = Organization(
             name=name,
-            registration_number=reg_number,
+            registration_number=generated_reg_num, # Injected securely here
             email=email,
             phone=phone,
             address=address,
@@ -90,7 +91,7 @@ def new_organization():
         )
         db.session.add(new_org)
         db.session.commit()
-        flash("Organization registered successfully.", "success")
+        flash(f"Organization registered! Official ID: {generated_reg_num}", "success")
         return redirect(url_for('superadmin.organizations'))
         
     return render_template("sp_org_form.html", org=None)
@@ -102,7 +103,7 @@ def edit_organization(org_id):
     
     if request.method == 'POST':
         org.name = request.form.get('name')
-        org.registration_number = request.form.get('registration_number')
+        # We DO NOT update org.registration_number here. It is permanently locked.
         org.email = request.form.get('email')
         org.phone = request.form.get('phone')
         org.address = request.form.get('address')
@@ -126,7 +127,6 @@ def delete_organization(org_id):
 @superadmin.route('/spdash/admins')
 @login_required
 def manage_admins():
-    # Fetch all admins and their linked organizations
     admins = AssociationAdmin.query.order_by(AssociationAdmin.created_at.desc()).all()
     return render_template("sp_admins.html", admins=admins)
 

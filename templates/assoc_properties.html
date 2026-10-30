@@ -1,0 +1,85 @@
+{% extends "assoc_base.html" %}
+
+{% block title %}Property Approvals | Association Portal{% endblock %}
+
+{% block content %}
+<style>
+    .table-container { background: white; border: 1px solid var(--border-grey); border-radius: 8px; overflow: hidden; margin-top: 1.5rem; }
+    .property-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .property-table th { background-color: #F9FAFB; padding: 1rem 1.5rem; font-size: 0.85rem; font-weight: 600; color: #4B5563; text-transform: uppercase; border-bottom: 1px solid var(--border-grey); }
+    .property-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-grey); vertical-align: middle; color: #111827; }
+    
+    .thumbnail { width: 60px; height: 45px; object-fit: cover; border-radius: 4px; background-color: #E5E7EB; display: block; }
+    
+    .badge { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+    .badge.pending { background-color: #FEF3C7; color: #92400E; }
+    .badge.verified { background-color: #D1FAE5; color: #065F46; }
+    .badge.rejected { background-color: #FEE2E2; color: #991B1B; }
+
+    .btn-review { background-color: #0A66C2; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; text-decoration: none; display: inline-block; }
+    .btn-review:hover { background-color: #004182; }
+</style>
+
+<div class="admin-header">
+    <h1>Property Approvals</h1>
+    <p style="color: var(--text-muted); margin-top: 0.25rem;">Review and verify land UPI numbers for properties listed by your brokers.</p>
+</div>
+
+<div class="table-container">
+    <table class="property-table">
+        <thead>
+            <tr>
+                <th>Property</th>
+                <th>Broker</th>
+                <th>UPI Number</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if properties %}
+                {% for property in properties %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            {% if property.images %}
+                                <img src="{{ property.images[0].image_url }}" alt="Thumbnail" class="thumbnail">
+                            {% else %}
+                                <div class="thumbnail" style="display:flex; align-items:center; justify-content:center; color:#9CA3AF;"><i class="fa-solid fa-image"></i></div>
+                            {% endif %}
+                            <div>
+                                <strong style="display: block; font-size: 0.95rem;">{{ property.title }}</strong>
+                                <span style="font-size: 0.85rem; color: #6B7280;">{{ property.location }} &bull; {{ property.listing_type }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <strong style="display: block; font-size: 0.9rem;">{{ property.broker.full_name }}</strong>
+                        <span style="font-size: 0.8rem; color: #6B7280; font-family: monospace;">{{ property.broker.license_number }}</span>
+                    </td>
+                    <td style="font-family: monospace; font-weight: 600; font-size: 1rem; color: #0A66C2;">
+                        {{ property.upi_number or 'N/A' }}
+                    </td>
+                    <td>
+                        <span class="badge {{ property.verification_status|lower }}">{{ property.verification_status }}</span>
+                    </td>
+                    <td>
+                        <!-- NEW REVIEW BUTTON -->
+                        <a href="{{ url_for('association.review_property', property_id=property.id) }}" class="btn-review">
+                            <i class="fa-solid fa-magnifying-glass"></i> Review
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 3rem 1rem; color: #6B7280;">
+                        <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 1rem; color: #9CA3AF;"></i>
+                        <p>No properties have been listed by your brokers yet.</p>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

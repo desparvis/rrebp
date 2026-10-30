@@ -22,11 +22,30 @@
             </div>
             
             <nav class="admin-nav">
-                <a href="/assocdash" class="{% if request.path == '/assocdash' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i> Overview</a>
-                <a href="/assocdash/brokers" class="{% if 'brokers' in request.path %}active{% endif %}"><i class="fa-solid fa-id-card-clip"></i> Manage Brokers</a>
-                <a href="/assocdash/settings" class="{% if 'settings' in request.path %}active{% endif %}"><i class="fa-solid fa-wallet"></i> Wallet Settings</a>
+                <!-- Overview -->
+                <a href="{{ url_for('association.dashboard') }}" class="{% if request.endpoint == 'association.dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-pie"></i> Overview
+                </a>
                 
-                <a href="/assocdash/logout" style="margin-top: auto; border-top: 1px solid #374151;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+                <!-- Manage Brokers -->
+                <a href="{{ url_for('association.brokers') }}" class="{% if 'brokers' in request.path %}active{% endif %}">
+                    <i class="fa-solid fa-id-card-clip"></i> Manage Brokers
+                </a>
+
+                <!-- THE FIX: Property Approvals Link Added -->
+                <a href="{{ url_for('association.manage_properties') }}" class="{% if 'properties' in request.path %}active{% endif %}">
+                    <i class="fa-solid fa-house-circle-check"></i> Property Approvals
+                </a>
+                
+                <!-- Wallet Settings -->
+                <a href="{{ url_for('association.settings') }}" class="{% if 'settings' in request.path %}active{% endif %}">
+                    <i class="fa-solid fa-wallet"></i> Wallet Settings
+                </a>
+                
+                <!-- Logout -->
+                <a href="{{ url_for('association.logout') }}" style="margin-top: auto; border-top: 1px solid #374151;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
             </nav>
         </aside>
 
@@ -122,7 +141,7 @@
             const confirmBtn = document.getElementById('modal-confirm-btn');
             let confirmAction = null; // Stores what happens when they click "Yes"
 
-            // 1. Intercept standard forms (Reject/Delete)
+            // 1. Intercept standard forms (Reject/Delete/Approve)
             const forms = document.querySelectorAll('form[onsubmit*="confirm"]');
             forms.forEach(form => {
                 const match = form.getAttribute('onsubmit').match(/confirm\(['"](.*?)['"]\)/);

@@ -70,12 +70,70 @@ class Broker(db.Model):
     
     verification_code = db.Column(db.String(255), nullable=True) 
     
+    # NEW: Secure code for clients to leave reviews
+    review_code = db.Column(db.String(20), unique=True, nullable=True)
+    
     status = db.Column(db.String(20), default='Pending Registration')
     
     verified_at = db.Column(db.DateTime, nullable=True)
     expires_at = db.Column(db.DateTime, nullable=True)
     
-    registered_by = db.Column(db.String(36), db.ForeignKey('association_admins.id'), nullable=False)
+    # FIX: Made nullable=True to allow public self-registration without breaking the database
+    registered_by = db.Column(db.String(36), db.ForeignKey('association_admins.id'), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # NEW: Relationships
+    properties = db.relationship('Property', backref='broker', lazy=True, cascade="all, delete-orphan")
+    reviews = db.relationship('Review', backref='broker', lazy=True, cascade="all, delete-orphan")
+
+class Property(db.Model):
+    __tablename__ = 'properties'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    broker_id = db.Column(db.String(36), db.ForeignKey('brokers.id'), nullable=False)
+    
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    price = db.Column(db.Numeric(12, 2), nullable=False)
+    listing_type = db.Column(db.String(50), nullable=False) # e.g., 'For Rent', 'For Sale'
+    location = db.Column(db.String(100), nullable=False)
+    
+    property_image = db.Column(db.String(255), nullable=True) # Cloudinary URL
+    upi_number = db.Column(db.String(50), nullable=True) # Land Documentation Number
+    
+    verification_status = db.Column(db.String(50), default='Pending') # Pending, Verified, Rejected
+    is_available = db.Column(db.Boolean, default=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    images = db.relationship('PropertyImage', backref='property', lazy=True, cascade="all, delete-orphan")
+
+class Review(db.Model):
+    __tablename__ = 'reviews'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    broker_id = db.Column(db.String(36), db.ForeignKey('brokers.id'), nullable=False)
+    
+    client_name = db.Column(db.String(100), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=False)
+    
+    is_approved = db.Column(db.Boolean, default=False)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class PropertyImage(db.Model):
+    __tablename__ = 'property_images'
+    
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    property_id = db.Column(db.String(36), db.ForeignKey('properties.id'), nullable=False)
+    
+    # Cloudinary URL
+    image_url = db.Column(db.String(255), nullable=False)
+    
+    public_id = db.Column(db.String(255), nullable=False) 
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

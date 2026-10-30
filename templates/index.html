@@ -36,15 +36,24 @@
         </div>
     </a>
 
-    <!-- Add this new box to your grid of links on the homepage -->
-    <a href="{{ url_for('landing.login_portal') }}" style="display: block; text-decoration: none; color: inherit; background-color: var(--bg-white); border: 1px solid var(--border-grey); border-radius: 8px; padding: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; transition: transform 0.2s;">
-        <div style="font-size: 2.5rem; color: var(--btn-blue); margin-bottom: 1rem;"><i class="fa-solid fa-user-tie"></i>
-    </div>
-    <h3 style="margin: 0 0 0.5rem 0; color: var(--text-dark);">Register Association Admin</h3>
-    <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">Apply to manage your organization's brokers on the blockchain.</p>
-</a>
-</section>
+    <!-- Cleaned up: Now matches the other action cards perfectly -->
+    <a href="/properties" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-building-user"></i></div>
+        <div class="action-text">
+            <h3>Browse Properties</h3>
+            <p>Explore verified real estate listings from certified Rwandan brokers.</p>
+        </div>
+    </a>
 
+    <!-- Cleaned up: Converted to a standard action-card -->
+    <a href="{{ url_for('landing.login_portal') }}" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-user-tie"></i></div>
+        <div class="action-text">
+            <h3>Register Association Admin</h3>
+            <p>Apply to manage your organization's brokers on the blockchain.</p>
+        </div>
+    </a>
+</section>
 
 <section id="about" class="about-section">
     <h2>About The Platform</h2>

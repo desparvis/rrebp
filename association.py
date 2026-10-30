@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, session, request, flash
 from functools import wraps
-from models import db, AssociationAdmin, Organization, Broker
+from models import db, AssociationAdmin, Organization, Broker, Property
 from datetime import datetime, timezone
 
 association = Blueprint('association', __name__, template_folder="templates", static_folder="static")
@@ -131,3 +131,57 @@ def settings():
         return {"status": "error"}, 400
         
     return render_template("assoc_settings.html")
+
+# ==========================================
+# PROPERTY MANAGEMENT & APPROVALS
+# ==========================================
+
+@association.route('/assocdash/properties')
+@assoc_login_required
+def manage_properties():
+    admin = AssociationAdmin.query.get(session['assoc_admin_id'])
+    
+    # Find all brokers that belong to this admin's organization
+    org_brokers = Broker.query.filter_by(organization_id=admin.organization_id).all()
+    broker_ids = [broker.id for broker in org_brokers]
+    
+    # Fetch all properties belonging to those brokers
+    if broker_ids:
+        properties = Property.query.filter(Property.broker_id.in_(broker_ids)).order_by(Property.created_at.desc()).all()
+    else:
+        properties = []
+        
+    return render_template('assoc_properties.html', admin=admin, properties=properties)
+
+@association.route('/assocdash/properties/<property_id>/approve', methods=['POST'])
+@assoc_login_required
+def approve_property(property_id):
+    property_obj = Property.query.get_or_404(property_id)
+    property_obj.verification_status = 'Verified'
+    db.session.commit()
+    
+    flash(f"Property '{property_obj.title}' has been officially verified.", "success")
+    return redirect(url_for('association.manage_properties'))
+
+@association.route('/assocdash/properties/<property_id>/reject', methods=['POST'])
+@assoc_login_required
+def reject_property(property_id):
+    property_obj = Property.query.get_or_404(property_id)
+    property_obj.verification_status = 'Rejected'
+    db.session.commit()
+    
+    flash(f"Property '{property_obj.title}' has been rejected.", "error")
+    return redirect(url_for('association.manage_properties'))
+
+@association.route('/assocdash/properties/<property_id>/review')
+@assoc_login_required
+def review_property(property_id):
+    admin = AssociationAdmin.query.get(session['assoc_admin_id'])
+    property_obj = Property.query.get_or_404(property_id)
+    
+    # Security Check: Ensure the property belongs to a broker in this admin's organization
+    if property_obj.broker.organization_id != admin.organization_id:
+        flash("Unauthorized access.", "error")
+        return redirect(url_for('association.manage_properties'))
+        
+    return render_template('assoc_property_review.html', admin=admin, property=property_obj)

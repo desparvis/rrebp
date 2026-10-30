@@ -42,10 +42,15 @@
             <input type="text" id="name" name="name" value="{{ org.name if org else '' }}" required>
         </div>
 
+        <!-- Only show Registration Number if we are EDITING an existing organization -->
+        {% if org %}
         <div class="form-group">
             <label for="registration_number">Official Registration Number</label>
-            <input type="text" id="registration_number" name="registration_number" value="{{ org.registration_number if org else '' }}" required>
+            <input type="text" id="registration_number" value="{{ org.registration_number }}" disabled 
+                style="background-color: #F3F4F6; color: #6B7280; cursor: not-allowed; font-family: monospace; font-weight: bold;">
+            <small style="color: #9CA3AF; margin-top: 0.25rem;">Registration numbers are auto-generated and immutable.</small>
         </div>
+        {% endif %}
 
         <div class="form-group">
             <label for="email">Contact Email</label>

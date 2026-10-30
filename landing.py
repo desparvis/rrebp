@@ -1,7 +1,9 @@
 from flask import redirect, url_for, render_template, session, flash, request, Blueprint
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Organization, AssociationAdmin, SuperAdmin, Broker
-import uuid 
+from models import db, Organization, AssociationAdmin, SuperAdmin, Broker, Property
+import uuid
+from datetime import datetime
+import random
 
 landing = Blueprint('landing', __name__, template_folder="templates", static_folder="static")
 
@@ -62,8 +64,9 @@ def login_portal():
                 if broker.status in ['Active', 'Pending Approval', 'Pending Registration']:
                     session['broker_id'] = broker.id
                     flash(f"Welcome back, {broker.full_name}!", "success")
-                    # return redirect(url_for('broker.dashboard')) # Uncomment when you build the broker dashboard!
-                    return redirect(url_for('landing.login_portal')) 
+                    
+                    # THE FIX: Now successfully routes to the newly created broker dashboard
+                    return redirect(url_for('broker.dashboard')) 
                 elif broker.status == 'Suspended':
                     flash("Your account has been suspended.", "error")
             else:
@@ -85,15 +88,16 @@ def apply():
     # Securely hash the password
     hashed_password = generate_password_hash(password)
 
-    # Broker Application
+    # ==========================================
+    # BROKER APPLICATION
+    # ==========================================
     if role == 'broker':
         phone = request.form.get('phone')
-        license_number = request.form.get('license_number')
         organization_id = request.form.get('organization_id')
         professional_title = request.form.get('professional_title')
         bio = request.form.get('bio')
         
-        # THE FIX: Hard-block if the organization doesn't have an active admin
+        # Security Check 1: Hard-block if the organization doesn't have an active admin
         active_admin_exists = AssociationAdmin.query.filter_by(
             organization_id=organization_id, 
             account_status='Active'
@@ -103,30 +107,42 @@ def apply():
             flash("Registration paused: This organization does not have an active administrator to review applications yet.", "error")
             return redirect(url_for('landing.login_portal'))
 
-        if Broker.query.filter_by(email=email).first() or Broker.query.filter_by(license_number=license_number).first():
-            flash("An application with this email or license number already exists.", "error")
+        # Security Check 2: Prevent duplicate emails
+        if Broker.query.filter_by(email=email).first():
+            flash("An application with this email already exists.", "error")
             return redirect(url_for('landing.login_portal'))
 
+        current_year = datetime.now().year
+        while True:
+            random_digits = ''.join([str(random.randint(0, 9)) for _ in range(10)])
+            generated_license = f"RWA-{current_year}-{random_digits}"
+            
+            # Check database to check uniqueness
+            if not Broker.query.filter_by(license_number=generated_license).first():
+                break
+
+        # Create Broker
         new_broker = Broker(
             full_name=full_name,
             email=email,
             password_hash=hashed_password, 
             phone=phone,
-            license_number=license_number,
+            license_number=generated_license, # Auto-injected
             organization_id=organization_id,
             professional_title=professional_title,
             bio=bio,
             status='Pending Approval',
-            registered_by='self'
+            registered_by=None # Adjusted from 'self' based on previous models update
         )
         db.session.add(new_broker)
         db.session.commit()
         
-        flash("Broker application submitted successfully! Your organization admin will review it shortly.", "success")
+        flash(f"Application submitted successfully! Your license number will be {generated_license}", "success")
 
-    # Association Admin Application
+    # ==========================================
+    # ASSOCIATION ADMIN APPLICATION
+    # ==========================================
     elif role == 'association':
-        # THE FIX: Grab the organization_id directly from the dropdown
         organization_id = request.form.get('organization_id')
         
         if AssociationAdmin.query.filter_by(email=email).first():
@@ -135,7 +151,6 @@ def apply():
 
         super_admin = SuperAdmin.query.first()
 
-        # Just create the admin and link them to the chosen organization ID
         new_admin = AssociationAdmin(
             full_name=full_name,
             email=email,
@@ -150,3 +165,15 @@ def apply():
         flash("Association application submitted! Awaiting Super Admin review.", "success")
 
     return redirect(url_for('landing.login_portal'))
+
+@landing.route('/properties') # Change @app to @landing if using a blueprint
+def public_properties():
+    # SECURITY: Only ever fetch properties that have been officially Verified
+    properties = Property.query.filter_by(verification_status='Verified').order_by(Property.created_at.desc()).all()
+    return render_template('public_properties.html', properties=properties)
+
+@landing.route('/properties/<property_id>') # Change @app to @landing if using a blueprint
+def public_property_detail(property_id):
+    # SECURITY: Ensure they can't manually type an ID for a Pending/Rejected property
+    property_obj = Property.query.filter_by(id=property_id, verification_status='Verified').first_or_404()
+    return render_template('public_property_detail.html', property=property_obj)
