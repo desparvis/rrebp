@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Error | RREBP</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9FAFB;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .error-container {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid #E5E7EB;
+        }
+        .btn-primary {
+            background-color: #111827;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        .btn-primary:hover {
+            background-color: #374151;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-container">
+        <div style="font-size: 5rem; color: #DC2626; margin-bottom: 1rem;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        
+        <h1 style="font-size: 3rem; color: #111827; margin: 0 0 0.5rem 0; font-weight: 800; letter-spacing: -1px;">500</h1>
+        
+        <h2 style="font-size: 1.5rem; color: #374151; margin: 0 0 1rem 0;">Internal Server Error</h2>
+        
+        <p style="color: #6B7280; font-size: 1rem; margin: 0 0 2rem 0; line-height: 1.6;">
+            Something went wrong on our end. Our engineering team has been notified. 
+        </p>
+        
+        <!-- Smart Go Back / Refresh Button -->
+        <button onclick="window.location.reload()" class="btn-primary" style="width: 100%; margin-bottom: 1rem;">
+            <i class="fa-solid fa-rotate-right"></i> Try Refreshing the Page
+        </button>
+
+        <button onclick="window.history.back()" style="background: transparent; color: #374151; border: 1px solid #D1D5DB; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem;">
+            <i class="fa-solid fa-arrow-left"></i> Go Back
+        </button>
+    </div>
+
+</body>
+</html>
