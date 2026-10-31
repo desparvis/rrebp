@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Leave a Review | RREBP{% endblock %}
+
+{% block content %}
+<style>
+    .review-container {
+        max-width: 600px;
+        margin: 4rem auto;
+        padding: 2rem;
+        background: white;
+        border: 1px solid var(--border-grey);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .review-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .review-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+    .review-header p {
+        color: #6B7280;
+        font-size: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    .form-group input, .form-group textarea {
+        padding: 0.85rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: #0A66C2;
+        box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.1);
+    }
+
+    /* CSS Star Rating Magic */
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+    .star-rating input[type="radio"] {
+        display: none;
+    }
+    .star-rating label {
+        font-size: 2rem;
+        color: #D1D5DB;
+        cursor: pointer;
+        transition: color 0.2s;
+        margin: 0;
+    }
+    /* When a star is checked, or hovered, turn it and all stars BEFORE it gold */
+    .star-rating input[type="radio"]:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #F59E0B;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+</style>
+
+<div class="review-container">
+    <div class="review-header">
+        <h1>Rate Your Broker</h1>
+        <p>Enter the review code provided by your broker to share your experience.</p>
+    </div>
+
+    <form action="{{ url_for('landing.leave_review') }}" method="POST">
+        
+        <div class="form-group">
+            <label for="review_code">Broker Review Code <span style="color: red;">*</span></label>
+            <input type="text" id="review_code" name="review_code" placeholder="e.g., REV-A1B2C3" value="{{ prefilled_code }}" required style="text-transform: uppercase;">
+        </div>
+
+        <div class="form-group">
+            <label for="client_name">Your Name <span style="color: red;">*</span></label>
+            <input type="text" id="client_name" name="client_name" placeholder="John Doe" required>
+        </div>
+
+        <div class="form-group">
+            <label>Rating <span style="color: red;">*</span></label>
+            <!-- Built in reverse so the CSS sibling selector (~) can color the stars to the left -->
+            <div class="star-rating">
+                <input type="radio" id="star5" name="rating" value="5" required>
+                <label for="star5" title="5 stars"><i class="fa-solid fa-star"></i></label>
+                
+                <input type="radio" id="star4" name="rating" value="4">
+                <label for="star4" title="4 stars"><i class="fa-solid fa-star"></i></label>
+                
+                <input type="radio" id="star3" name="rating" value="3">
+                <label for="star3" title="3 stars"><i class="fa-solid fa-star"></i></label>
+                
+                <input type="radio" id="star2" name="rating" value="2">
+                <label for="star2" title="2 stars"><i class="fa-solid fa-star"></i></label>
+                
+                <input type="radio" id="star1" name="rating" value="1">
+                <label for="star1" title="1 star"><i class="fa-solid fa-star"></i></label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="comment">Your Review <span style="color: red;">*</span></label>
+            <textarea id="comment" name="comment" rows="5" placeholder="How was your experience working with this broker?" required></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary submit-btn">Submit Review</button>
+    </form>
+</div>
+{% endblock %}

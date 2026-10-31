@@ -10,16 +10,6 @@
     <h1>Brokers</h1>
 </div>
 
-{% with messages = get_flashed_messages(category_filter=["success", "info", "error"]) %}
-{% if messages %}
-{% for message in messages %}
-<div
-    style="background-color: #EFF6FF; color: #1D4ED8; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; border: 1px solid #BFDBFE;">
-    {{ message }}</div>
-{% endfor %}
-{% endif %}
-{% endwith %}
-
 <div class="table-wrapper">
     <table class="data-table" style="width: 100%; border-collapse: collapse; background-color: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <thead>

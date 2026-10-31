@@ -11,13 +11,26 @@
 
 <div style="background-color: white; border-radius: 8px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 800px; margin-top: 1rem;">
     
-    <div style="border-bottom: 1px solid #E5E7EB; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
-        <h2 style="margin: 0; color: #111827; font-size: 1.5rem;">{{ broker.full_name }}</h2>
-        <p style="margin: 0.5rem 0 0 0; color: #6B7280; font-size: 1rem;">
-            {{ broker.professional_title if broker.professional_title else 'Real Estate Broker' }}
-        </p>
+    <div style="border-bottom: 1px solid #E5E7EB; padding-bottom: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.5rem;">
+        
+        <!-- NEW: Profile Photo Preview -->
+        {% if broker.profile_photo_url %}
+            <img src="{{ broker.profile_photo_url }}" alt="Profile Photo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #E5E7EB;">
+        {% else %}
+            <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #F3F4F6; display: flex; align-items: center; justify-content: center; color: #9CA3AF; font-size: 2.5rem; border: 2px solid #E5E7EB;">
+                <i class="fa-solid fa-user-tie"></i>
+            </div>
+        {% endif %}
+
+        <div>
+            <h2 style="margin: 0; color: #111827; font-size: 1.5rem;">{{ broker.full_name }}</h2>
+            <p style="margin: 0.5rem 0 0 0; color: #6B7280; font-size: 1rem;">
+                {{ broker.professional_title if broker.professional_title else 'Real Estate Broker' }}
+            </p>
+        </div>
     </div>
 
+    <!-- UPDATED: Grid includes Working Location -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
         <div>
             <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">Email Address</span>
@@ -26,6 +39,14 @@
         <div>
             <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">Phone Number</span>
             <strong style="color: #111827;">{{ broker.phone }}</strong>
+        </div>
+        <div>
+            <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">Working Province</span>
+            <strong style="color: #111827;">{{ broker.working_province if broker.working_province else 'N/A' }}</strong>
+        </div>
+        <div>
+            <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">Working District</span>
+            <strong style="color: #111827;">{{ broker.working_district if broker.working_district else 'N/A' }}</strong>
         </div>
         <div>
             <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.25rem;">License Number</span>

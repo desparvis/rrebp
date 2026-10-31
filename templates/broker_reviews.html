@@ -1,0 +1,195 @@
+{% extends "broker_base.html" %}
+
+{% block title %}Client Reviews | Broker Portal{% endblock %}
+
+{% block content %}
+<style>
+    .stats-header {
+        display: flex;
+        gap: 2rem;
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-grey);
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .stat-box {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .stat-title {
+        font-size: 0.85rem;
+        color: #6B7280;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .code-box {
+        background: #EFF6FF;
+        border: 1px dashed #3B82F6;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex: 2;
+        min-width: 300px;
+    }
+
+    .review-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .review-card {
+        background: white;
+        border: 1px solid var(--border-grey);
+        border-radius: 8px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .review-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .client-name {
+        font-weight: 600;
+        color: #111827;
+        font-size: 1.1rem;
+    }
+    
+    .review-date {
+        font-size: 0.8rem;
+        color: #9CA3AF;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .badge.approved { background-color: #D1FAE5; color: #065F46; }
+    .badge.pending { background-color: #FEF3C7; color: #92400E; }
+
+    .stars {
+        color: #F59E0B;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+    }
+
+    .review-comment {
+        color: #4B5563;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        font-style: italic;
+        flex-grow: 1;
+    }
+</style>
+
+<div class="admin-header">
+    <h1>Client Reviews</h1>
+    <p style="color: var(--text-muted); margin-top: 0.25rem;">Monitor what your clients are saying. Reviews require Admin approval before going public.</p>
+</div>
+
+<!-- Stats and Code Section -->
+<div class="stats-header">
+    <div class="stat-box">
+        <div class="stat-title">Average Rating</div>
+        <div class="stat-value">
+            {{ avg_rating }} <i class="fa-solid fa-star" style="color: #F59E0B; font-size: 1.5rem;"></i>
+        </div>
+    </div>
+    
+    <div class="stat-box">
+        <div class="stat-title">Total Reviews</div>
+        <div class="stat-value">{{ reviews|length }}</div>
+    </div>
+
+    <div class="code-box">
+        <div>
+            <div class="stat-title" style="color: #1E3A8A;">Your Unique Review Code</div>
+            <div style="font-family: monospace; font-size: 1.25rem; font-weight: 700; color: #1D4ED8; letter-spacing: 2px;">
+                {{ broker.review_code or 'N/A' }}
+            </div>
+            <p style="font-size: 0.8rem; color: #3B82F6; margin-top: 0.25rem; margin-bottom: 0;">Give this code to clients so they can rate you.</p>
+        </div>
+        <!-- Quick copy button -->
+        <button onclick="navigator.clipboard.writeText('{{ broker.review_code }}'); alert('Code copied to clipboard!');" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+            <i class="fa-solid fa-copy"></i> Copy
+        </button>
+    </div>
+</div>
+
+<!-- Reviews Grid -->
+<div class="review-grid">
+    {% for review in reviews %}
+    <div class="review-card">
+        <div class="review-header">
+            <div>
+                <div class="client-name">{{ review.client_name }}</div>
+                <!-- Assuming your model has a created_at field, format it. If not, just remove this line -->
+                <span class="review-date">{{ review.created_at.strftime('%B %d, %Y') if review.created_at else 'Recent' }}</span>
+            </div>
+            
+            {% if review.is_approved %}
+                <span class="badge approved"><i class="fa-solid fa-check"></i> Public</span>
+            {% else %}
+                <span class="badge pending"><i class="fa-solid fa-clock"></i> Pending Admin</span>
+            {% endif %}
+        </div>
+        
+        <div class="stars">
+            {% for _ in range(review.rating) %}
+                <i class="fa-solid fa-star"></i>
+            {% endfor %}
+            {% for _ in range(5 - review.rating) %}
+                <i class="fa-regular fa-star" style="color: #D1D5DB;"></i>
+            {% endfor %}
+        </div>
+        
+        <div class="review-comment">
+            "{{ review.comment }}"
+        </div>
+    </div>
+    {% else %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; background: white; border-radius: 8px; border: 1px solid var(--border-grey);">
+        <i class="fa-solid fa-comment-slash" style="font-size: 3rem; color: #9CA3AF; margin-bottom: 1rem;"></i>
+        <h3 style="color: #374151;">No reviews yet</h3>
+        <p style="color: #6B7280;">Share your review code with clients after closing a deal to build your reputation.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

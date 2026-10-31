@@ -10,6 +10,8 @@
     .form-group label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.9rem; }
     .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box; }
     
+    .section-title { font-size: 1.1rem; color: #111827; margin-top: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 0.5rem; }
+
     .file-upload-box { border: 2px dashed #D1D5DB; padding: 2rem; text-align: center; border-radius: 8px; background-color: #F9FAFB; transition: border-color 0.2s; }
     .file-upload-box:hover { border-color: #0A66C2; }
     .file-upload-box input[type="file"] { display: none; }
@@ -23,8 +25,9 @@
 </div>
 
 <div class="form-card">
-    <!-- Notice the enctype attribute. This is mandatory for image uploads! -->
     <form action="{{ url_for('broker.add_property') }}" method="POST" enctype="multipart/form-data" id="propertyForm">
+        
+        <h3 class="section-title">General Details</h3>
         
         <div class="form-group">
             <label for="title">Listing Title <span style="color: red;">*</span></label>
@@ -48,8 +51,53 @@
 
         <div class="form-row">
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="location">Location / Neighborhood <span style="color: red;">*</span></label>
-                <input type="text" id="location" name="location" placeholder="e.g., Kibagabaga, Kigali" required>
+                <label for="bedrooms">Bedrooms</label>
+                <input type="number" id="bedrooms" name="bedrooms" placeholder="e.g., 4" min="0">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="bathrooms">Bathrooms</label>
+                <input type="number" id="bathrooms" name="bathrooms" placeholder="e.g., 3" min="0">
+            </div>
+        </div>
+
+        <h3 class="section-title">Property Location</h3>
+
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="province">Province <span style="color: red;">*</span></label>
+                <select id="province" name="province" required>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="district">District <span style="color: red;">*</span></label>
+                <select id="district" name="district" disabled required>
+                    <option value="">Select District</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="sector">Sector <span style="color: red;">*</span></label>
+                <select id="sector" name="sector" disabled required>
+                    <option value="">Select Sector</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cell">Cell <span style="color: red;">*</span></label>
+                <select id="cell" name="cell" disabled required>
+                    <option value="">Select Cell</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="village">Village <span style="color: red;">*</span></label>
+                <select id="village" name="village" disabled required>
+                    <option value="">Select Village</option>
+                </select>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
                 <label for="upi_number">Land UPI Number <span style="color: red;">*</span></label>
@@ -57,6 +105,8 @@
                 <small style="color: #6B7280; margin-top: 0.25rem;">Required for Association verification.</small>
             </div>
         </div>
+
+        <h3 class="section-title">Description & Media</h3>
 
         <div class="form-group">
             <label for="description">Property Description <span style="color: red;">*</span></label>
@@ -72,21 +122,20 @@
                 <label for="images" class="custom-file-upload">
                     Browse Files
                 </label>
-                <!-- 'multiple' allows selecting multiple photos at once -->
-                <!-- 'accept="image/*"' restricts uploads to images only -->
                 <input type="file" id="images" name="images" multiple accept="image/*" required onchange="updateFileCount()">
                 
                 <span id="file-count"></span>
             </div>
         </div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.05rem;" onclick="showLoader('Uploading images to Cloudinary...')">
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.05rem;" onclick="showLoader('Uploading images and saving property...')">
             Submit Property for Verification
         </button>
     </form>
 </div>
 
 <script>
+    // Handles the file upload counter
     function updateFileCount() {
         const input = document.getElementById('images');
         const countDisplay = document.getElementById('file-count');
@@ -98,5 +147,95 @@
             countDisplay.innerText = '';
         }
     }
+
+    // Handles the cascading location dropdowns from JSON
+    document.addEventListener("DOMContentLoaded", () => {
+        const selects = {
+            province: document.getElementById("province"),
+            district: document.getElementById("district"),
+            sector: document.getElementById("sector"),
+            cell: document.getElementById("cell"),
+            village: document.getElementById("village")
+        };
+
+        let locationData = [];
+
+        // Fetch the JSON from the static folder using Flask's url_for
+        fetch("{{ url_for('static', filename='data/locations.json') }}")
+            .then(response => {
+                if (!response.ok) throw new Error("Could not load locations data");
+                return response.json();
+            })
+            .then(data => {
+                locationData = data;
+                populateDropdown(selects.province, getUniqueValues(data, "province_name"));
+            })
+            .catch(error => {
+                console.error("Error loading locations:", error);
+                selects.province.innerHTML = `<option value="">Error loading locations</option>`;
+            });
+
+        // Extract unique, sorted names for the dropdown
+        function getUniqueValues(dataArray, key) {
+            return [...new Set(dataArray.map(item => item[key]))].sort();
+        }
+
+        // Inject the <option> elements and enable the select box
+        function populateDropdown(selectElement, values) {
+            selectElement.innerHTML = `<option value="">Select...</option>`;
+            values.forEach(val => {
+                if (val) selectElement.innerHTML += `<option value="${val}">${val}</option>`;
+            });
+            selectElement.disabled = values.length === 0;
+        }
+
+        // --- CASCADING LOGIC ---
+        selects.province.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => loc.province_name === e.target.value);
+            populateDropdown(selects.district, getUniqueValues(filtered, "district_name"));
+            
+            populateDropdown(selects.sector, []);
+            populateDropdown(selects.cell, []);
+            populateDropdown(selects.village, []);
+            selects.sector.disabled = true;
+            selects.cell.disabled = true;
+            selects.village.disabled = true;
+        });
+
+        selects.district.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === e.target.value
+            );
+            populateDropdown(selects.sector, getUniqueValues(filtered, "sector_name"));
+            
+            populateDropdown(selects.cell, []);
+            populateDropdown(selects.village, []);
+            selects.cell.disabled = true;
+            selects.village.disabled = true;
+        });
+
+        selects.sector.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === selects.district.value && 
+                loc.sector_name === e.target.value
+            );
+            populateDropdown(selects.cell, getUniqueValues(filtered, "cell_name"));
+            
+            populateDropdown(selects.village, []);
+            selects.village.disabled = true;
+        });
+
+        selects.cell.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === selects.district.value && 
+                loc.sector_name === selects.sector.value && 
+                loc.cell_name === e.target.value
+            );
+            populateDropdown(selects.village, getUniqueValues(filtered, "village_name"));
+        });
+    });
 </script>
 {% endblock %}

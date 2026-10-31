@@ -31,6 +31,11 @@
     .badge.pending { background-color: #FEF3C7; color: #92400E; }
     .badge.verified { background-color: #D1FAE5; color: #065F46; }
     .badge.rejected { background-color: #FEE2E2; color: #991B1B; }
+
+    @media (max-width: 768px) {
+        .details-grid { grid-template-columns: 1fr; gap: 1rem; }
+        .action-bar { flex-direction: column; }
+    }
 </style>
 
 <div class="admin-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -70,11 +75,31 @@
                 <span class="detail-label">Price</span>
                 <span class="detail-value" style="font-family: monospace; font-size: 1.15rem; color: #059669;">{{ "{:,.0f}".format(property.price) }} RWF</span>
             </div>
+            
+            <div class="detail-group" style="display: flex; gap: 1.5rem; margin-top: 1rem;">
+                {% if property.bedrooms is not none %}
+                <div>
+                    <span class="detail-label">Bedrooms</span>
+                    <span class="detail-value"><i class="fa-solid fa-bed" style="color: #6B7280;"></i> {{ property.bedrooms }}</span>
+                </div>
+                {% endif %}
+                
+                {% if property.bathrooms is not none %}
+                <div>
+                    <span class="detail-label">Bathrooms</span>
+                    <span class="detail-value"><i class="fa-solid fa-bath" style="color: #6B7280;"></i> {{ property.bathrooms }}</span>
+                </div>
+                {% endif %}
+            </div>
         </div>
         <div>
             <div class="detail-group">
-                <span class="detail-label">Location / Neighborhood</span>
-                <span class="detail-value">{{ property.location }}</span>
+                <span class="detail-label">Geographic Location</span>
+                <span class="detail-value">
+                    {{ property.province }}, {{ property.district }},<br>
+                    {{ property.sector }}, {{ property.cell }}
+                    {% if property.village %}, {{ property.village }}{% endif %}
+                </span>
             </div>
             <div class="detail-group">
                 <span class="detail-label">Land UPI Number</span>

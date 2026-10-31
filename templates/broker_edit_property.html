@@ -10,6 +10,8 @@
     .form-group label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.9rem; }
     .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 4px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box; }
     
+    .section-title { font-size: 1.1rem; color: #111827; margin-top: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 0.5rem; }
+
     .file-upload-box { border: 2px dashed #D1D5DB; padding: 1.5rem; text-align: center; border-radius: 8px; background-color: #F9FAFB; }
     .file-upload-box input[type="file"] { display: none; }
     .custom-file-upload { display: inline-block; padding: 0.5rem 1rem; background-color: white; border: 1px solid #D1D5DB; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 0.9rem; }
@@ -35,13 +37,12 @@
 <div class="form-card">
     
     <!-- Existing Images Gallery -->
-    <h3 style="font-size: 1rem; color: #374151; margin-bottom: 1rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 0.5rem;">Current Photos</h3>
+    <h3 class="section-title">Current Photos</h3>
     <div class="image-gallery">
         {% for image in property.images %}
             <div class="image-wrapper">
                 <img src="{{ image.image_url }}" alt="Property Image">
                 
-                <!-- The "X" Button to delete this specific image -->
                 <form action="{{ url_for('broker.delete_image', image_id=image.id) }}" method="POST" onsubmit="return confirm('Permanently delete this photo?');" style="margin:0; padding:0;">
                     <button type="submit" class="btn-delete-img" title="Remove Photo"><i class="fa-solid fa-xmark"></i></button>
                 </form>
@@ -54,38 +55,87 @@
     <!-- The Update Form -->
     <form action="{{ url_for('broker.edit_property', property_id=property.id) }}" method="POST" enctype="multipart/form-data">
         
+        <h3 class="section-title">General Details</h3>
+        
         <div class="form-group">
-            <label for="title">Listing Title</label>
+            <label for="title">Listing Title <span style="color: red;">*</span></label>
             <input type="text" id="title" name="title" value="{{ property.title }}" required>
         </div>
 
         <div class="form-row">
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="listing_type">Listing Type</label>
+                <label for="listing_type">Listing Type <span style="color: red;">*</span></label>
                 <select id="listing_type" name="listing_type" required>
                     <option value="For Sale" {% if property.listing_type == 'For Sale' %}selected{% endif %}>For Sale</option>
                     <option value="For Rent" {% if property.listing_type == 'For Rent' %}selected{% endif %}>For Rent</option>
                 </select>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="price">Price (RWF)</label>
+                <label for="price">Price (RWF) <span style="color: red;">*</span></label>
                 <input type="number" id="price" name="price" value="{{ '{:.0f}'.format(property.price) }}" required>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="location">Location / Neighborhood</label>
-                <input type="text" id="location" name="location" value="{{ property.location }}" required>
+                <label for="bedrooms">Bedrooms</label>
+                <input type="number" id="bedrooms" name="bedrooms" value="{{ property.bedrooms if property.bedrooms is not none else '' }}" min="0">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="upi_number">Land UPI Number</label>
+                <label for="bathrooms">Bathrooms</label>
+                <input type="number" id="bathrooms" name="bathrooms" value="{{ property.bathrooms if property.bathrooms is not none else '' }}" min="0">
+            </div>
+        </div>
+
+        <h3 class="section-title">Property Location</h3>
+
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="province">Province <span style="color: red;">*</span></label>
+                <select id="province" name="province" required>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="district">District <span style="color: red;">*</span></label>
+                <select id="district" name="district" required>
+                    <option value="">Select District</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="sector">Sector <span style="color: red;">*</span></label>
+                <select id="sector" name="sector" required>
+                    <option value="">Select Sector</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="cell">Cell <span style="color: red;">*</span></label>
+                <select id="cell" name="cell" required>
+                    <option value="">Select Cell</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="village">Village <span style="color: red;">*</span></label>
+                <select id="village" name="village" required>
+                    <option value="">Select Village</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="upi_number">Land UPI Number <span style="color: red;">*</span></label>
                 <input type="text" id="upi_number" name="upi_number" value="{{ property.upi_number or '' }}" required>
             </div>
         </div>
 
+        <h3 class="section-title">Description & Media</h3>
+
         <div class="form-group">
-            <label for="description">Property Description</label>
+            <label for="description">Property Description <span style="color: red;">*</span></label>
             <textarea id="description" name="description" rows="5" required>{{ property.description }}</textarea>
         </div>
 
@@ -103,4 +153,113 @@
         </button>
     </form>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const selects = {
+            province: document.getElementById("province"),
+            district: document.getElementById("district"),
+            sector: document.getElementById("sector"),
+            cell: document.getElementById("cell"),
+            village: document.getElementById("village")
+        };
+
+        // Pass existing data from database
+        const selectedProvince = "{{ property.province }}";
+        const selectedDistrict = "{{ property.district }}";
+        const selectedSector = "{{ property.sector }}";
+        const selectedCell = "{{ property.cell }}";
+        const selectedVillage = "{{ property.village }}";
+
+        let locationData = [];
+
+        fetch("{{ url_for('static', filename='data/locations.json') }}")
+            .then(r => r.json())
+            .then(data => {
+                locationData = data;
+                populateDropdown(selects.province, getUniqueValues(data, "province_name"), selectedProvince);
+                
+                if (selectedProvince) {
+                    const distData = locationData.filter(loc => loc.province_name === selectedProvince);
+                    populateDropdown(selects.district, getUniqueValues(distData, "district_name"), selectedDistrict);
+                    
+                    if (selectedDistrict) {
+                        const secData = distData.filter(loc => loc.district_name === selectedDistrict);
+                        populateDropdown(selects.sector, getUniqueValues(secData, "sector_name"), selectedSector);
+                        
+                        if (selectedSector) {
+                            const cellData = secData.filter(loc => loc.sector_name === selectedSector);
+                            populateDropdown(selects.cell, getUniqueValues(cellData, "cell_name"), selectedCell);
+                            
+                            if (selectedCell) {
+                                const villageData = cellData.filter(loc => loc.cell_name === selectedCell);
+                                populateDropdown(selects.village, getUniqueValues(villageData, "village_name"), selectedVillage);
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error("Failed to load locations:", err));
+
+        function getUniqueValues(dataArray, key) {
+            return [...new Set(dataArray.map(item => item[key]))].sort();
+        }
+
+        function populateDropdown(selectElement, values, selectedValue = '') {
+            const defaultText = selectElement.options[0].text;
+            selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+            values.forEach(val => {
+                if (val) {
+                    const isSelected = val === selectedValue ? 'selected' : '';
+                    selectElement.innerHTML += `<option value="${val}" ${isSelected}>${val}</option>`;
+                }
+            });
+            selectElement.disabled = values.length === 0;
+        }
+
+        selects.province.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => loc.province_name === e.target.value);
+            populateDropdown(selects.district, getUniqueValues(filtered, "district_name"));
+            populateDropdown(selects.sector, []);
+            populateDropdown(selects.cell, []);
+            populateDropdown(selects.village, []);
+            selects.sector.disabled = true;
+            selects.cell.disabled = true;
+            selects.village.disabled = true;
+        });
+
+        selects.district.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === e.target.value
+            );
+            populateDropdown(selects.sector, getUniqueValues(filtered, "sector_name"));
+            populateDropdown(selects.cell, []);
+            populateDropdown(selects.village, []);
+            selects.cell.disabled = true;
+            selects.village.disabled = true;
+        });
+
+        selects.sector.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === selects.district.value &&
+                loc.sector_name === e.target.value
+            );
+            populateDropdown(selects.cell, getUniqueValues(filtered, "cell_name"));
+            populateDropdown(selects.village, []);
+            selects.village.disabled = true;
+        });
+
+        selects.cell.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === selects.district.value &&
+                loc.sector_name === selects.sector.value &&
+                loc.cell_name === e.target.value
+            );
+            populateDropdown(selects.village, getUniqueValues(filtered, "village_name"));
+        });
+    });
+</script>
 {% endblock %}

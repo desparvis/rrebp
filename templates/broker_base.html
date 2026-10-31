@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Broker Portal | RREBP{% endblock %}</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
 </head>
+
 <body>
     <div class="admin-layout">
         <!-- Broker Sidebar -->
@@ -23,20 +27,21 @@
             </div>
             <nav class="admin-nav">
                 <!-- Overview / Dashboard -->
-                <a href="{{ url_for('broker.dashboard') }}" class="{% if request.endpoint == 'broker.dashboard' %}active{% endif %}">
+                <a href="{{ url_for('broker.dashboard') }}"
+                    class="{% if request.endpoint == 'broker.dashboard' %}active{% endif %}">
                     <i class="fa-solid fa-house"></i> Overview
                 </a>
-                
+
                 <!-- THE FIX: Linked directly to the my_properties route -->
-                <a href="{{ url_for('broker.my_properties') }}" class="{% if 'properties' in request.path %}active{% endif %}">
+                <a href="{{ url_for('broker.my_properties') }}"
+                    class="{% if 'properties' in request.path %}active{% endif %}">
                     <i class="fa-solid fa-city"></i> My Properties
                 </a>
-                
-                <!-- We will build this route next, but it's ready! -->
-                <a href="#" class="{% if 'reviews' in request.path %}active{% endif %}">
+
+                <a href="{{ url_for('broker.my_reviews') }}" class="nav-item">
                     <i class="fa-solid fa-star"></i> Client Reviews
                 </a>
-                
+
                 <a href="{{ url_for('broker.logout') }}" style="margin-top: auto; border-top: 1px solid #334155;">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
                 </a>
@@ -47,17 +52,19 @@
         <main class="admin-main">
             <!-- Toast Notifications -->
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div id="toast-container">
-                        {% for category, message in messages %}
-                            {% set toast_class = 'toast-success' if category == 'success' else 'toast-error' if category == 'error' else 'toast-warning' if category == 'warning' else 'toast-info' %}
-                            <div class="toast-alert {{ toast_class }}">
-                                <span class="toast-message">{{ message }}</span>
-                                <button type="button" class="toast-close" onclick="this.closest('.toast-alert').remove()">&times;</button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+            {% if messages %}
+            <div id="toast-container">
+                {% for category, message in messages %}
+                {% set toast_class = 'toast-success' if category == 'success' else 'toast-error' if category == 'error'
+                else 'toast-warning' if category == 'warning' else 'toast-info' %}
+                <div class="toast-alert {{ toast_class }}">
+                    <span class="toast-message">{{ message }}</span>
+                    <button type="button" class="toast-close"
+                        onclick="this.closest('.toast-alert').remove()">&times;</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             {% endwith %}
 
             {% block content %}{% endblock %}
@@ -71,8 +78,11 @@
             <h3>Are you sure?</h3>
             <p id="confirm-modal-msg">This action cannot be undone.</p>
             <div class="confirm-buttons">
-                <button id="modal-cancel-btn" style="padding: 0.6rem 1.2rem; background-color: #F3F4F6; color: #374151; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Cancel</button>
-                <button id="modal-confirm-btn" style="padding: 0.6rem 1.2rem; background-color: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Yes, Proceed</button>
+                <button id="modal-cancel-btn"
+                    style="padding: 0.6rem 1.2rem; background-color: #F3F4F6; color: #374151; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Cancel</button>
+                <button id="modal-confirm-btn"
+                    style="padding: 0.6rem 1.2rem; background-color: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Yes,
+                    Proceed</button>
             </div>
         </div>
     </div>
@@ -91,7 +101,7 @@
             let confirmAction = null;
 
             document.querySelectorAll('a[href*="logout"]').forEach(link => {
-                link.addEventListener('click', function(e) {
+                link.addEventListener('click', function (e) {
                     e.preventDefault();
                     msgText.textContent = "Are you sure you want to log out of your session?";
                     confirmAction = () => window.location.href = link.href;
@@ -100,8 +110,9 @@
             });
 
             document.getElementById('modal-cancel-btn')?.addEventListener('click', () => overlay.classList.remove('active'));
-            document.getElementById('modal-confirm-btn')?.addEventListener('click', () => { if(confirmAction) confirmAction(); });
+            document.getElementById('modal-confirm-btn')?.addEventListener('click', () => { if (confirmAction) confirmAction(); });
         });
     </script>
 </body>
+
 </html>

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Home | RREBP{% endblock %}
 
 {% block content %}
 <!-- Introduction section -->
 <section id="home" class="hero-section">
-    <h1>Ensuring Broker's Transparency In Rwanda</h1>
-    <p>The Real Estate Brokers Platform(RREBP) is a platform that provides real estate assocations with an accessible way to register brokers on an immutable registry, allowing real estate clients to verify their legitimacy.</p>
+    <h1>Ensuring Broker Transparency In Rwanda</h1>
+    <p>The Real Estate Brokers Platform (RREBP) provides real estate associations with an accessible way to register brokers on an immutable registry, allowing real estate clients to verify their legitimacy.</p>
     <a href="/verify" class="btn-primary" style="font-size: 1.1rem; padding: 0.75rem 2rem;">Verify a Broker Profile</a>
 </section>
 
@@ -28,16 +28,15 @@
         </div>
     </a>
 
-    <a href="/broker-rankings" class="action-card">
+    <a href="{{ url_for('landing.broker_rankings') }}" class="action-card">
         <div class="action-icon"><i class="fa-solid fa-chart-line"></i></div>
         <div class="action-text">
             <h3>View Broker Rankings</h3>
-            <p>Property owners can evaluate highly-rated brokers.</p>
+            <p>Property owners can evaluate highly-rated brokers based on verified client feedback.</p>
         </div>
     </a>
 
-    <!-- Cleaned up: Now matches the other action cards perfectly -->
-    <a href="/properties" class="action-card">
+    <a href="{{ url_for('landing.public_properties') }}" class="action-card">
         <div class="action-icon"><i class="fa-solid fa-building-user"></i></div>
         <div class="action-text">
             <h3>Browse Properties</h3>
@@ -45,12 +44,20 @@
         </div>
     </a>
 
-    <!-- Cleaned up: Converted to a standard action-card -->
     <a href="{{ url_for('landing.login_portal') }}" class="action-card">
         <div class="action-icon"><i class="fa-solid fa-user-tie"></i></div>
         <div class="action-text">
-            <h3>Register Association Admin</h3>
-            <p>Apply to manage your organization's brokers on the blockchain.</p>
+            <h3>Association Portal</h3>
+            <p>Log in to manage your organization's brokers and property listings.</p>
+        </div>
+    </a>
+
+    <!-- NEW: Review Card -->
+    <a href="{{ url_for('landing.leave_review') }}" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-star-half-stroke"></i></div>
+        <div class="action-text">
+            <h3>Rate Your Broker</h3>
+            <p>Use your secure review code to rate your experience and help others find great brokers.</p>
         </div>
     </a>
 </section>

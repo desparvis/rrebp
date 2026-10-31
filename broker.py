@@ -6,10 +6,8 @@ import string
 import cloudinary.uploader
 import cloudinary.api
 
-# Create the Blueprint
 broker_bp = Blueprint('broker', __name__, template_folder="templates", static_folder="static")
 
-# Protection Decorator - UPGRADED
 def broker_login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -17,7 +15,6 @@ def broker_login_required(f):
             flash("Please log in to access the Broker Portal.", "warning")
             return redirect(url_for('landing.login_portal'))
             
-        # THE FIX: Check if they were suspended while already logged in
         broker = Broker.query.get(session['broker_id'])
         if not broker or broker.status == 'Suspended':
             session.pop('broker_id', None)
@@ -32,7 +29,6 @@ def broker_login_required(f):
 def dashboard():
     broker = Broker.query.get(session['broker_id'])
     
-    # 1. Generate Review Code
     if not broker.review_code:
         while True:
             random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -42,10 +38,7 @@ def dashboard():
                 db.session.commit()
                 break
 
-    # 2. Get their organization details
     organization = Organization.query.get(broker.organization_id)
-    
-    # 3. Get quick stats
     active_properties = Property.query.filter_by(broker_id=broker.id, is_available=True).count()
     pending_reviews = Review.query.filter_by(broker_id=broker.id, is_approved=False).count()
     
@@ -57,59 +50,70 @@ def dashboard():
         pending_reviews=pending_reviews
     )
 
-@broker_bp.route('/properties')
+@broker_bp.route('/my-properties')
 @broker_login_required
 def my_properties():
     broker = Broker.query.get(session['broker_id'])
     
-    # Fetch all properties belonging to this broker, newest first
-    properties = Property.query.filter_by(broker_id=broker.id).order_by(Property.created_at.desc()).all()
+    query = Property.query.filter_by(broker_id=broker.id)
+
+    province = request.args.get('province')
+    district = request.args.get('district')
+    sector = request.args.get('sector')
+    cell = request.args.get('cell')
+    village = request.args.get('village')
+    listing_type = request.args.get('listing_type')
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+    bedrooms = request.args.get('bedrooms', type=int)
+    bathrooms = request.args.get('bathrooms', type=int)
+
+    if province: query = query.filter_by(province=province)
+    if district: query = query.filter_by(district=district)
+    if sector: query = query.filter_by(sector=sector)
+    if cell: query = query.filter_by(cell=cell)
+    if village: query = query.filter_by(village=village)
+    if listing_type: query = query.filter_by(listing_type=listing_type)
+    if min_price is not None: query = query.filter(Property.price >= min_price)
+    if max_price is not None: query = query.filter(Property.price <= max_price)
+    if bedrooms is not None: query = query.filter(Property.bedrooms >= bedrooms)
+    if bathrooms is not None: query = query.filter(Property.bathrooms >= bathrooms)
+
+    properties = query.order_by(Property.created_at.desc()).all()
     
     return render_template('broker_properties.html', broker=broker, properties=properties)
 
-@broker_bp.route('/properties/add', methods=['GET', 'POST'])
+@broker_bp.route('/my-properties/add', methods=['GET', 'POST'])
 @broker_login_required
 def add_property():
     broker = Broker.query.get(session['broker_id'])
     
     if request.method == 'POST':
-        title = request.form.get('title')
-        description = request.form.get('description')
-        price = request.form.get('price')
-        listing_type = request.form.get('listing_type')
-        location = request.form.get('location')
-        upi_number = request.form.get('upi_number')
-        
-        # 1. Create the Property first so we get its ID
         new_property = Property(
             broker_id=broker.id,
-            title=title,
-            description=description,
-            price=price,
-            listing_type=listing_type,
-            location=location,
-            upi_number=upi_number,
+            title=request.form.get('title'),
+            description=request.form.get('description'),
+            price=request.form.get('price'),
+            listing_type=request.form.get('listing_type'),
+            province=request.form.get('province'),
+            district=request.form.get('district'),
+            sector=request.form.get('sector'),
+            cell=request.form.get('cell'),
+            village=request.form.get('village'),
+            bedrooms=request.form.get('bedrooms', type=int),
+            bathrooms=request.form.get('bathrooms', type=int),
+            upi_number=request.form.get('upi_number'),
             verification_status='Pending'
         )
         db.session.add(new_property)
-        db.session.flush() # This safely generates the new_property.id without permanently committing yet
+        db.session.flush() 
         
-        # 2. Handle Multiple Images Upload to Cloudinary
-        # HTML file inputs accepting multiple files use getlist()
         images = request.files.getlist('images')
-        
         for file in images:
             if file.filename != '':
-                # Organize Cloudinary bucket beautifully: RREBP / Brokers / RWA-123... / Properties / property-uuid
                 folder_path = f"RREBP/Brokers/{broker.license_number}/Properties/{new_property.id}"
+                upload_result = cloudinary.uploader.upload(file, folder=folder_path)
                 
-                # Push to Cloudinary
-                upload_result = cloudinary.uploader.upload(
-                    file,
-                    folder=folder_path
-                )
-                
-                # Save the secure URL back to our database
                 new_image = PropertyImage(
                     property_id=new_property.id,
                     image_url=upload_result.get('secure_url'),
@@ -123,30 +127,31 @@ def add_property():
         
     return render_template('broker_add_property.html', broker=broker)
 
-@broker_bp.route('/properties/<property_id>/edit', methods=['GET', 'POST'])
+@broker_bp.route('/my-properties/<property_id>/edit', methods=['GET', 'POST'])
 @broker_login_required
 def edit_property(property_id):
     broker = Broker.query.get(session['broker_id'])
     property_obj = Property.query.get_or_404(property_id)
     
-    # Security: Ensure they only edit their own property
     if property_obj.broker_id != broker.id:
         flash("Unauthorized access.", "error")
         return redirect(url_for('broker.my_properties'))
         
     if request.method == 'POST':
-        # 1. Update all text fields
         property_obj.title = request.form.get('title')
         property_obj.description = request.form.get('description')
         property_obj.price = request.form.get('price')
         property_obj.listing_type = request.form.get('listing_type')
-        property_obj.location = request.form.get('location')
+        property_obj.province = request.form.get('province')
+        property_obj.district = request.form.get('district')
+        property_obj.sector = request.form.get('sector')
+        property_obj.cell = request.form.get('cell')
+        property_obj.village = request.form.get('village')
+        property_obj.bedrooms = request.form.get('bedrooms', type=int)
+        property_obj.bathrooms = request.form.get('bathrooms', type=int)
         property_obj.upi_number = request.form.get('upi_number')
-        
-        # 2. THE SECURITY LOCK: Always revert to pending after any edit
         property_obj.verification_status = 'Pending'
         
-        # 3. Handle new images if they uploaded any
         images = request.files.getlist('images')
         for file in images:
             if file.filename != '':
@@ -166,30 +171,27 @@ def edit_property(property_id):
         
     return render_template('broker_edit_property.html', broker=broker, property=property_obj)
 
-@broker_bp.route('/properties/image/<image_id>/delete', methods=['POST'])
+@broker_bp.route('/my-properties/image/<image_id>/delete', methods=['POST'])
 @broker_login_required
 def delete_image(image_id):
     image = PropertyImage.query.get_or_404(image_id)
     property_obj = Property.query.get(image.property_id)
     broker = Broker.query.get(session['broker_id'])
     
-    # Security check
     if property_obj.broker_id != broker.id:
         return {"error": "Unauthorized"}, 403
         
-    # 1. Delete from Cloudinary
     try:
         cloudinary.uploader.destroy(image.public_id)
     except Exception as e:
         print(f"Cloudinary deletion failed: {e}")
         
-    # 2. Delete from Database
     db.session.delete(image)
     db.session.commit()
     
     return redirect(url_for('broker.edit_property', property_id=property_obj.id))
 
-@broker_bp.route('/properties/<property_id>/delete', methods=['POST'])
+@broker_bp.route('/my-properties/<property_id>/delete', methods=['POST'])
 @broker_login_required
 def delete_property(property_id):
     broker = Broker.query.get(session['broker_id'])
@@ -199,21 +201,18 @@ def delete_property(property_id):
         flash("Unauthorized access.", "error")
         return redirect(url_for('broker.my_properties'))
         
-    # 1. Delete all images from Cloudinary first
     for image in property_obj.images:
         try:
             cloudinary.uploader.destroy(image.public_id)
         except:
             pass
             
-    # 2. Delete the empty folder from Cloudinary
     folder_path = f"RREBP/Brokers/{broker.license_number}/Properties/{property_obj.id}"
     try:
         cloudinary.api.delete_folder(folder_path)
     except Exception as e:
-        print(f"Folder deletion failed (might be already empty/missing): {e}")
+        print(f"Folder deletion failed: {e}")
 
-    # 3. Delete from Database (Cascade will auto-delete the PropertyImage rows)
     db.session.delete(property_obj)
     db.session.commit()
     
@@ -224,3 +223,19 @@ def delete_property(property_id):
 def logout():
     session.pop('broker_id', None)
     return redirect(url_for('landing.login_portal'))
+
+@broker_bp.route('/my-reviews')
+@broker_login_required
+def my_reviews():
+    broker = Broker.query.get(session['broker_id'])
+    
+    # Fetch all reviews for this broker, newest first
+    reviews = Review.query.filter_by(broker_id=broker.id).order_by(Review.created_at.desc()).all()
+    
+    # Calculate average rating from approved reviews only
+    approved_reviews = [r for r in reviews if r.is_approved]
+    avg_rating = 0
+    if approved_reviews:
+        avg_rating = round(sum(r.rating for r in approved_reviews) / len(approved_reviews), 1)
+        
+    return render_template('broker_reviews.html', broker=broker, reviews=reviews, avg_rating=avg_rating)

@@ -1,49 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Organization Dashboard | RREBP{% endblock %}</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@1,700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
 </head>
+
 <body>
-    
+    <style>
+        /* Notification Badge for Admin Nav */
+        .nav-badge {
+            background-color: #EF4444;
+            /* Alert Red */
+            color: #FFFFFF;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.15rem 0.6rem;
+            border-radius: 999px;
+            margin-left: auto;
+            /* Pushes badge to the far right */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-nav a {
+            display: flex;
+            align-items: center;
+            /* This ensures the margin-left: auto on the badge works perfectly */
+        }
+
+        .admin-nav a i {
+            width: 24px;
+            /* Keeps your icons perfectly aligned */
+            margin-right: 0.75rem;
+        }
+    </style>
+
     <div class="admin-layout">
         <!-- Side Navigation (Personalized) -->
         <aside class="admin-sidebar" style="background-color: #1F2937;">
             <div class="logo" style="padding: 1.5rem; border-bottom: 1px solid #374151;">
-                <span style="display: block; font-size: 1.1rem; font-weight: bold; line-height: 1.2; color: white;">{{ current_admin.organization.name }}</span>
-                <span style="display: block; font-size: 0.85rem; color: #9CA3AF; font-weight: normal; margin-top: 0.4rem;">{{ current_admin.full_name }}</span>
+                <span style="display: block; font-size: 1.1rem; font-weight: bold; line-height: 1.2; color: white;">{{
+                    current_admin.organization.name }}</span>
+                <span
+                    style="display: block; font-size: 0.85rem; color: #9CA3AF; font-weight: normal; margin-top: 0.4rem;">{{
+                    current_admin.full_name }}</span>
             </div>
-            
+
             <nav class="admin-nav">
                 <!-- Overview -->
                 <a href="{{ url_for('association.dashboard') }}" class="{% if request.endpoint == 'association.dashboard' %}active{% endif %}">
                     <i class="fa-solid fa-chart-pie"></i> Overview
                 </a>
-                
+
                 <!-- Manage Brokers -->
                 <a href="{{ url_for('association.brokers') }}" class="{% if 'brokers' in request.path %}active{% endif %}">
                     <i class="fa-solid fa-id-card-clip"></i> Manage Brokers
+                    {% if pending_brokers_count > 0 %}
+                        <span class="nav-badge">{{ pending_brokers_count }}</span>
+                    {% endif %}
                 </a>
 
-                <!-- THE FIX: Property Approvals Link Added -->
+                <!-- Property Approvals -->
                 <a href="{{ url_for('association.manage_properties') }}" class="{% if 'properties' in request.path %}active{% endif %}">
                     <i class="fa-solid fa-house-circle-check"></i> Property Approvals
+                    {% if pending_properties_count > 0 %}
+                        <span class="nav-badge">{{ pending_properties_count }}</span>
+                    {% endif %}
                 </a>
-                
+
+                <!-- Pending Reviews -->
+                <a href="{{ url_for('association.manage_reviews') }}" class="{% if 'reviews' in request.path %}active{% endif %}">
+                    <i class="fa-solid fa-star"></i> Pending Reviews
+                    {% if pending_reviews_count > 0 %}
+                        <span class="nav-badge">{{ pending_reviews_count }}</span>
+                    {% endif %}
+                </a>
+
                 <!-- Wallet Settings -->
                 <a href="{{ url_for('association.settings') }}" class="{% if 'settings' in request.path %}active{% endif %}">
                     <i class="fa-solid fa-wallet"></i> Wallet Settings
                 </a>
-                
+
                 <!-- Logout -->
-                <a href="{{ url_for('association.logout') }}" style="margin-top: auto; border-top: 1px solid #374151;">
+                <a href="{{ url_for('association.logout') }}" style="margin-top: auto; border-top: 1px solid #374151; padding-top: 1rem;">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
                 </a>
             </nav>
@@ -53,17 +103,19 @@
         <main class="admin-main">
             <!-- Flask flash notifications -->
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div id="toast-container">
-                        {% for category, message in messages %}
-                            {% set toast_class = 'toast-success' if category == 'success' else 'toast-error' if category == 'error' else 'toast-warning' if category == 'warning' else 'toast-info' %}
-                            <div class="toast-alert {{ toast_class }}">
-                                <span class="toast-message">{{ message }}</span>
-                                <button type="button" class="toast-close" aria-label="Dismiss notification" onclick="this.closest('.toast-alert').remove()">&times;</button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+            {% if messages %}
+            <div id="toast-container">
+                {% for category, message in messages %}
+                {% set toast_class = 'toast-success' if category == 'success' else 'toast-error' if category == 'error'
+                else 'toast-warning' if category == 'warning' else 'toast-info' %}
+                <div class="toast-alert {{ toast_class }}">
+                    <span class="toast-message">{{ message }}</span>
+                    <button type="button" class="toast-close" aria-label="Dismiss notification"
+                        onclick="this.closest('.toast-alert').remove()">&times;</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             {% endwith %}
 
             {% block content %}{% endblock %}
@@ -73,7 +125,7 @@
     <!-- ========================================== -->
     <!-- UI OVERLAYS (MODAL & LOADER)               -->
     <!-- ========================================== -->
-    
+
     <!-- 1. Confirmation Modal -->
     <div class="ui-overlay" id="confirm-modal-overlay">
         <div class="confirm-box">
@@ -81,8 +133,11 @@
             <h3>Are you sure?</h3>
             <p id="confirm-modal-msg">This action cannot be undone.</p>
             <div class="confirm-buttons">
-                <button id="modal-cancel-btn" style="padding: 0.6rem 1.2rem; background-color: #F3F4F6; color: #374151; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Cancel</button>
-                <button id="modal-confirm-btn" style="padding: 0.6rem 1.2rem; background-color: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Yes, Proceed</button>
+                <button id="modal-cancel-btn"
+                    style="padding: 0.6rem 1.2rem; background-color: #F3F4F6; color: #374151; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Cancel</button>
+                <button id="modal-confirm-btn"
+                    style="padding: 0.6rem 1.2rem; background-color: #DC2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Yes,
+                    Proceed</button>
             </div>
         </div>
     </div>
@@ -114,14 +169,14 @@
             initToasts();
 
             // --- Global Toast Function (Summon from anywhere!) ---
-            window.showToast = function(message, type = 'error') {
+            window.showToast = function (message, type = 'error') {
                 let container = document.getElementById('toast-container');
                 if (!container) {
                     container = document.createElement('div');
                     container.id = 'toast-container';
                     document.querySelector('.admin-main').prepend(container);
                 }
-                
+
                 const toastClass = type === 'success' ? 'toast-success' : (type === 'error' ? 'toast-error' : 'toast-warning');
                 const toastHTML = document.createElement('div');
                 toastHTML.className = `toast-alert ${toastClass}`;
@@ -129,7 +184,7 @@
                     <span class="toast-message">${message}</span>
                     <button type="button" class="toast-close" onclick="this.closest('.toast-alert').remove()">&times;</button>
                 `;
-                
+
                 container.appendChild(toastHTML);
                 initToasts(); // Attach the auto-dismiss timer to the new toast
             };
@@ -148,7 +203,7 @@
                 const customMsg = match ? match[1] : "Are you sure you want to proceed?";
                 form.removeAttribute('onsubmit');
 
-                form.addEventListener('submit', function(e) {
+                form.addEventListener('submit', function (e) {
                     e.preventDefault();
                     msgText.textContent = customMsg;
                     confirmAction = () => form.submit();
@@ -159,7 +214,7 @@
             // 2. Intercept Logout Links
             const logoutLinks = document.querySelectorAll('a[href*="logout"]');
             logoutLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
+                link.addEventListener('click', function (e) {
                     e.preventDefault();
                     msgText.textContent = "Are you sure you want to log out of your session?";
                     confirmAction = () => window.location.href = link.href;
@@ -168,24 +223,25 @@
             });
 
             // Modal Button Listeners
-            if(cancelBtn) cancelBtn.addEventListener('click', () => overlay.classList.remove('active'));
-            if(confirmBtn) confirmBtn.addEventListener('click', () => {
+            if (cancelBtn) cancelBtn.addEventListener('click', () => overlay.classList.remove('active'));
+            if (confirmBtn) confirmBtn.addEventListener('click', () => {
                 if (confirmAction) confirmAction();
             });
         });
 
         // --- Global Loader Logic ---
-        window.showLoader = function(message = "Processing...") {
+        window.showLoader = function (message = "Processing...") {
             const msgEl = document.getElementById('loader-msg');
             const overlayEl = document.getElementById('loader-overlay');
             if (msgEl) msgEl.textContent = message;
             if (overlayEl) overlayEl.classList.add('active');
         };
 
-        window.hideLoader = function() {
+        window.hideLoader = function () {
             const overlayEl = document.getElementById('loader-overlay');
             if (overlayEl) overlayEl.classList.remove('active');
         };
     </script>
 </body>
+
 </html>

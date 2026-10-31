@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}{{ property.title }} | RREBP{% endblock %}
+
+{% block content %}
+<style>
+    .property-wrapper {
+        max-width: 1200px;
+        margin: 2rem auto 5rem auto;
+        padding: 0 2rem;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumb {
+        font-size: 0.9rem;
+        color: #6B7280;
+        margin-bottom: 1.5rem;
+    }
+
+    .breadcrumb a {
+        color: #0A66C2;
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Hero Image */
+    .hero-image-container {
+        width: 100%;
+        height: 500px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 2.5rem;
+        background-color: #F3F4F6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #E5E7EB;
+    }
+
+    .hero-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Two Column Layout */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    /* Left Column: Property Info */
+    .property-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #E5E7EB;
+        padding-bottom: 1.5rem;
+    }
+
+    .property-type-badge {
+        display: inline-block;
+        background: #EFF6FF;
+        color: #1D4ED8;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .property-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #111827;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.2;
+    }
+
+    .property-location {
+        font-size: 1.1rem;
+        color: #6B7280;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .property-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0A66C2;
+        margin-top: 1rem;
+    }
+
+    /* Key Features */
+    .features-row {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        background: #F9FAFB;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.1rem;
+        color: #374151;
+        font-weight: 500;
+    }
+
+    .feature-item i {
+        color: #9CA3AF;
+        font-size: 1.25rem;
+    }
+
+    /* Description */
+    .section-title {
+        font-size: 1.5rem;
+        font-family: 'Playfair Display', serif;
+        color: #111827;
+        margin-bottom: 1rem;
+    }
+
+    .property-description {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: #4B5563;
+        white-space: pre-wrap;
+        /* Preserves line breaks from the database */
+    }
+
+    /* Right Column: Broker Card (Sticky) */
+    .broker-sidebar {
+        position: sticky;
+        top: 2rem;
+    }
+
+    .broker-card {
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .broker-avatar {
+        width: 80px;
+        height: 80px;
+        background-color: #EFF6FF;
+        color: #0A66C2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1rem auto;
+    }
+
+    .broker-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.25rem;
+    }
+
+    .broker-org {
+        font-size: 0.9rem;
+        color: #6B7280;
+        margin-bottom: 1.5rem;
+    }
+
+    .contact-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.85rem;
+        border-radius: 6px;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 1rem;
+        transition: background 0.2s;
+        box-sizing: border-box;
+    }
+
+    .btn-call {
+        background-color: #10B981;
+        color: white;
+    }
+
+    .btn-call:hover {
+        background-color: #059669;
+    }
+
+    .btn-profile {
+        background-color: white;
+        color: #0A66C2;
+        border: 1px solid #0A66C2;
+    }
+
+    .btn-profile:hover {
+        background-color: #0A66C2;
+        color: white;
+    }
+
+    .verified-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: #059669;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: #D1FAE5;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        margin-top: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-image-container {
+            height: 350px;
+        }
+
+        .broker-sidebar {
+            position: static;
+        }
+    }
+</style>
+
+<div class="property-wrapper">
+
+    <div class="breadcrumb">
+        <a href="{{ url_for('landing.home') }}">Home</a> &rsaquo;
+        <a href="{{ url_for('landing.public_properties') }}">Properties</a> &rsaquo;
+        <span style="color: #111827; font-weight: 500;">{{ property.title }}</span>
+    </div>
+
+    <!-- Main Image -->
+    <div class="hero-image-container">
+        {% if property.images %}
+        <img src="{{ property.images[0].image_url }}" alt="{{ property.title }}" class="hero-image">
+        {% else %}
+        <div style="color: #9CA3AF; text-align: center;">
+            <i class="fa-solid fa-image" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+            <p>No image available</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-grid">
+
+        <!-- Left Column: Details -->
+        <div class="property-main">
+            <div class="property-header">
+                <span class="property-type-badge">For {{ property.listing_type }}</span>
+                <h1 class="property-title">{{ property.title }}</h1>
+                <div class="property-location">
+                    <i class="fa-solid fa-location-dot"></i>
+                    {{ property.sector }}, {{ property.district }}, {{ property.province }}
+                </div>
+                <div class="property-price">{{ "{:,.0f}".format(property.price) }} RWF</div>
+            </div>
+
+            <!-- Quick Specs -->
+            <div class="features-row">
+                <div class="feature-item">
+                    <i class="fa-solid fa-bed"></i>
+                    <span>{{ property.bedrooms }} Beds</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fa-solid fa-bath"></i>
+                    <span>{{ property.bathrooms }} Baths</span>
+                </div>
+                <!-- You can add square footage here if you have it in your model -->
+            </div>
+
+            <!-- Full Description -->
+            <h2 class="section-title">About this property</h2>
+            <div class="property-description">{{ property.description }}</div>
+
+            <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 3rem 0;">
+
+            <!-- Exact Location Breakdown -->
+            <h2 class="section-title">Location Details</h2>
+            <table style="width: 100%; max-width: 400px; text-align: left; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #F3F4F6;">
+                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">Province</th>
+                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.province }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #F3F4F6;">
+                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">District</th>
+                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.district }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #F3F4F6;">
+                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">Sector</th>
+                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.sector }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #F3F4F6;">
+                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">Cell</th>
+                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.cell }}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">Village</th>
+                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.village }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Right Column: Broker Sidebar -->
+        <div class="broker-sidebar">
+            <div class="broker-card">
+                <div class="broker-avatar" style="background-color: transparent; border: none; padding: 0;">
+                    {% if property.broker.profile_photo_url %}
+                        <img src="{{ property.broker.profile_photo_url }}" alt="{{ property.broker.full_name }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #E5E7EB;">
+                    {% else %}
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #EFF6FF; color: #0A66C2; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid #E5E7EB;">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="broker-name">{{ property.broker.full_name }}</div>
+                <div class="broker-org">{{ org_name }}</div>
+
+                <a href="tel:{{ property.broker.phone }}" class="contact-btn btn-call">
+                    <i class="fa-solid fa-phone"></i> {{ property.broker.phone }}
+                </a>
+
+                <a href="{{ url_for('landing.public_broker_profile', broker_id=property.broker.id) }}"
+                    class="contact-btn btn-profile">
+                    <i class="fa-regular fa-star"></i> View Broker Profile
+                </a>
+
+                <div class="verified-badge">
+                    <i class="fa-solid fa-shield-check"></i> Verified Listing
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -20,11 +20,34 @@
         <!-- Side Navigation -->
         <aside class="admin-sidebar">
             <a href="/" class="logo">RREBP Admin</a>
-           <nav class="admin-nav">
-                <a href="/spdash" class="{% if request.path == '/spdash' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
-                <a href="/spdash/organizations" class="{% if 'organizations' in request.path %}active{% endif %}"><i class="fa-solid fa-building"></i> Organizations</a>
-                <a href="/spdash/admins" class="{% if 'admins' in request.path %}active{% endif %}"><i class="fa-solid fa-users-gear"></i> Association Admins</a>
-                <a href="/spdash/logout" style="margin-top: auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+            <nav class="admin-nav">
+                <style>
+                    .nav-item { display: flex; align-items: center; justify-content: space-between; text-decoration: none; }
+                    .nav-item i { margin-right: 0.5rem; width: 20px; text-align: center; }
+                    .nav-badge { 
+                        background-color: #EF4444; color: white; font-size: 0.75rem; 
+                        font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 999px; 
+                    }
+                </style>
+
+                <a href="/spdash" class="nav-item {% if request.path == '/spdash' %}active{% endif %}">
+                    <span><i class="fa-solid fa-chart-line"></i> Dashboard</span>
+                </a>
+                
+                <a href="/spdash/organizations" class="nav-item {% if 'organizations' in request.path %}active{% endif %}">
+                    <span><i class="fa-solid fa-building"></i> Organizations</span>
+                </a>
+                
+                <a href="/spdash/admins" class="nav-item {% if 'admins' in request.path %}active{% endif %}">
+                    <span><i class="fa-solid fa-users-gear"></i> Association Admins</span>
+                    {% if pending_admins_count > 0 %}
+                        <span class="nav-badge">{{ pending_admins_count }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="/spdash/logout" class="nav-item" style="margin-top: auto;">
+                    <span><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</span>
+                </a>
             </nav>
         </aside>
 
@@ -113,7 +136,7 @@
             const msgText = document.getElementById('confirm-modal-msg');
             const cancelBtn = document.getElementById('modal-cancel-btn');
             const confirmBtn = document.getElementById('modal-confirm-btn');
-            let confirmAction = null; // Stores what happens when they click "Yes"
+            let confirmAction = null;
 
             // 1. Intercept standard forms (Reject/Delete)
             const forms = document.querySelectorAll('form[onsubmit*="confirm"]');

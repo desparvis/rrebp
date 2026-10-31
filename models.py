@@ -68,9 +68,13 @@ class Broker(db.Model):
     profile_photo_url = db.Column(db.String(255), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     
+    # NEW: Broker Work Location
+    working_province = db.Column(db.String(100), nullable=True)
+    working_district = db.Column(db.String(100), nullable=True)
+    
     verification_code = db.Column(db.String(255), nullable=True) 
     
-    # NEW: Secure code for clients to leave reviews
+    # Secure code for clients to leave reviews
     review_code = db.Column(db.String(20), unique=True, nullable=True)
     
     status = db.Column(db.String(20), default='Pending Registration')
@@ -84,7 +88,7 @@ class Broker(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # NEW: Relationships
+    # Relationships
     properties = db.relationship('Property', backref='broker', lazy=True, cascade="all, delete-orphan")
     reviews = db.relationship('Review', backref='broker', lazy=True, cascade="all, delete-orphan")
 
@@ -98,7 +102,17 @@ class Property(db.Model):
     description = db.Column(db.Text, nullable=False)
     price = db.Column(db.Numeric(12, 2), nullable=False)
     listing_type = db.Column(db.String(50), nullable=False) # e.g., 'For Rent', 'For Sale'
-    location = db.Column(db.String(100), nullable=False)
+    
+    # Bedrooms and Bathrooms
+    bedrooms = db.Column(db.Integer, nullable=True)
+    bathrooms = db.Column(db.Integer, nullable=True)
+    
+    # Direct string columns for locations (handled by static JSON on frontend)
+    province = db.Column(db.String(100), nullable=False)
+    district = db.Column(db.String(100), nullable=False)
+    sector = db.Column(db.String(100), nullable=False)
+    cell = db.Column(db.String(100), nullable=False)
+    village = db.Column(db.String(100), nullable=False)
     
     property_image = db.Column(db.String(255), nullable=True) # Cloudinary URL
     upi_number = db.Column(db.String(50), nullable=True) # Land Documentation Number
@@ -137,3 +151,21 @@ class PropertyImage(db.Model):
     public_id = db.Column(db.String(255), nullable=False) 
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Audit logs
+class AuditLog(db.Model):
+    __tablename__ = 'audit_logs'
+    
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    
+    actor_type = db.Column(db.String(50), nullable=False)
+    actor_id = db.Column(db.String(36), nullable=False)
+    
+    action = db.Column(db.String(100), nullable=False)
+    
+    target_type = db.Column(db.String(50), nullable=True)
+    target_id = db.Column(db.String(36), nullable=True)
+    
+    description = db.Column(db.Text, nullable=False)
+    
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Broker Rankings | RREBP{% endblock %}
+
+{% block content %}
+<style>
+    /* Tightened wrapper margin and width */
+    .rankings-wrapper {
+        max-width: 900px;
+        margin: 2.5rem auto 4rem auto;
+        padding: 0 1.5rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Reduced header sizing and spacing */
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.85rem;
+        color: #111827;
+        margin-bottom: 0.25rem;
+    }
+
+    .page-header p {
+        color: #6B7280;
+        font-size: 0.95rem;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    /* Tighter gap between rows */
+    .broker-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* Compact row padding */
+    .broker-row {
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        padding: 0.85rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .broker-row:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.05);
+        border-color: #CBD5E1;
+    }
+
+    .rank-and-profile {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        flex: 1;
+    }
+
+    /* Scaled down rank numbers */
+    .rank-badge {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #9CA3AF;
+        width: 35px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .rank-1 .rank-badge {
+        color: #F59E0B;
+        font-size: 1.5rem;
+    }
+
+    /* Gold */
+    .rank-2 .rank-badge {
+        color: #94A3B8;
+        font-size: 1.35rem;
+    }
+
+    /* Silver */
+    .rank-3 .rank-badge {
+        color: #B45309;
+        font-size: 1.25rem;
+    }
+
+    /* Bronze */
+
+    /* Smaller avatar */
+    .broker-avatar {
+        width: 45px;
+        height: 45px;
+        background-color: #EFF6FF;
+        color: #0A66C2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    /* Scaled down text */
+    .broker-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .broker-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.15rem;
+    }
+
+    .broker-org {
+        font-size: 0.85rem;
+        color: #6B7280;
+    }
+
+    /* Compact rating block */
+    .rating-block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        flex-shrink: 0;
+        text-align: right;
+    }
+
+    .rating-score {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .rating-stars {
+        color: #F59E0B;
+        font-size: 0.95rem;
+    }
+
+    .review-count {
+        font-size: 0.75rem;
+        color: #6B7280;
+        margin-top: 0.15rem;
+    }
+
+    /* Smaller button */
+    .action-block {
+        flex-shrink: 0;
+    }
+
+    .btn-profile {
+        background-color: white;
+        border: 1px solid #0A66C2;
+        color: #0A66C2;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .broker-row:hover .btn-profile {
+        background-color: #0A66C2;
+        color: white;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .broker-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1.25rem;
+        }
+
+        .rating-block {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            text-align: left;
+            padding-left: 4.5rem;
+            box-sizing: border-box;
+        }
+
+        .action-block {
+            width: 100%;
+            margin-top: 0.25rem;
+        }
+
+        .btn-profile {
+            width: 100%;
+            text-align: center;
+            display: block;
+            box-sizing: border-box;
+        }
+    }
+</style>
+
+<div class="rankings-wrapper">
+    <div class="page-header">
+        <h1>Top Rated Brokers</h1>
+        <p>Find trusted real estate professionals in Rwanda, ranked by verified client feedback.</p>
+    </div>
+
+    <div class="broker-list">
+        {% for stat in broker_stats %}
+        <a href="{{ url_for('landing.public_broker_profile', broker_id=stat.broker.id) }}"
+            class="broker-row rank-{{ loop.index }}">
+
+            <div class="rank-and-profile">
+                <div class="rank-badge">#{{ loop.index }}</div>
+                {% if stat.broker.profile_photo_url %}
+                    <img src="{{ stat.broker.profile_photo_url }}" alt="{{ stat.broker.full_name }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background-color: #F3F4F6; color: #9CA3AF; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                {% endif %}
+                <div class="broker-info">
+                    <div class="broker-name">{{ stat.broker.full_name }}</div>
+                    <div class="broker-org">{{ stat.org_name }}</div>
+                </div>
+            </div>
+
+            <div class="rating-block">
+                <div class="rating-score">
+                    {{ stat.avg_rating }}
+                    <span class="rating-stars"><i class="fa-solid fa-star"></i></span>
+                </div>
+                <div class="review-count">Based on {{ stat.review_count }} verified review(s)</div>
+            </div>
+
+            <div class="action-block">
+                <div class="btn-profile">View Profile</div>
+            </div>
+
+        </a>
+        {% else %}
+        <div
+            style="text-align: center; padding: 3rem; color: #6B7280; background: white; border-radius: 8px; border: 1px solid #E5E7EB;">
+            <i class="fa-solid fa-users-slash" style="font-size: 2.5rem; color: #9CA3AF; margin-bottom: 0.75rem;"></i>
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem; color: #374151;">No active brokers found</h3>
+            <p style="font-size: 0.9rem;">Check back soon once brokers receive verified feedback.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

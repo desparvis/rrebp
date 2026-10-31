@@ -3,9 +3,101 @@
 {% block title %}Dashboard | Super Admin{% endblock %}
 
 {% block content %}
+<style>
+    /* Advanced Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1.2fr;
+        gap: 2rem;
+        margin-top: 2rem;
+        align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Panel Styling */
+    .dashboard-panel {
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+    
+    .panel-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #E5E7EB;
+        background-color: #F9FAFB;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .panel-header h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Audit Log Feed Styles */
+    .log-feed {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+    .log-item {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        position: relative;
+    }
+    .log-item:last-child { margin-bottom: 0; }
+    
+    /* Timeline connector line */
+    .log-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 17px;
+        top: 36px;
+        bottom: -1.25rem;
+        width: 2px;
+        background-color: #F3F4F6;
+        z-index: 1;
+    }
+
+    .log-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+        z-index: 2;
+        border: 2px solid white;
+    }
+    
+    .log-content { flex-grow: 1; padding-top: 0.2rem; }
+    .log-text { font-size: 0.9rem; color: #374151; margin: 0; line-height: 1.4; }
+    .log-meta { font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem; display: flex; gap: 0.5rem; }
+    .log-target { font-weight: 600; color: #111827; }
+
+    /* Dynamic Log Colors */
+    .icon-green { background-color: #D1FAE5; color: #059669; }
+    .icon-red { background-color: #FEE2E2; color: #DC2626; }
+    .icon-blue { background-color: #DBEAFE; color: #1D4ED8; }
+    .icon-purple { background-color: #F3E8FF; color: #7E22CE; }
+    .icon-gray { background-color: #F3F4F6; color: #4B5563; }
+</style>
+
 <div class="admin-header">
     <h1>System Overview</h1>
-    <a href="/spdash/organizations/new" class="btn-primary"><i class="fa-solid fa-plus"></i> Register Organization</a>
+    <a href="{{ url_for('superadmin.new_organization') }}" class="btn-primary"><i class="fa-solid fa-plus"></i> Register Organization</a>
 </div>
 
 <div class="metrics-grid">
@@ -14,7 +106,7 @@
         <div class="metric-icon"><i class="fa-solid fa-building-circle-check"></i></div>
         <div class="metric-data">
             <h3>Active Organizations</h3>
-            <p>{{ active_orgs }}</p> <!-- Dynamic now -->
+            <p>{{ active_orgs }}</p>
         </div>
     </div>
 
@@ -23,7 +115,7 @@
         <div class="metric-icon"><i class="fa-solid fa-users"></i></div>
         <div class="metric-data">
             <h3>Registered Admins</h3>
-            <p>{{ total_admins }}</p> <!-- We will pass this from superadmin.py -->
+            <p>{{ total_admins }}</p>
         </div>
     </div>
 
@@ -32,8 +124,108 @@
         <div class="metric-icon" style="color: #DC2626; background-color: #FEF2F2;"><i class="fa-solid fa-triangle-exclamation"></i></div>
         <div class="metric-data">
             <h3>Suspended Entities</h3>
-            <p>{{ suspended_orgs }}</p> <!-- Dynamic now -->
+            <p>{{ suspended_orgs }}</p>
         </div>
     </div>
+</div>
+
+<div class="dashboard-grid">
+    
+    <!-- LEFT COLUMN: Action Required -->
+    <div class="dashboard-panel">
+        <div class="panel-header">
+            <h2><i class="fa-solid fa-clipboard-check" style="color: #0A66C2;"></i> Pending Approvals</h2>
+            {% if pending_admins %}
+                <span style="background: #FEF3C7; color: #92400E; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 99px; font-weight: 700;">{{ pending_admins|length }} Pending</span>
+            {% endif %}
+        </div>
+        
+        {% if pending_admins %}
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 1px solid #E5E7EB;">
+                    <th style="padding: 1rem 1.5rem; font-size: 0.8rem; color: #6B7280; text-transform: uppercase;">Applicant Name</th>
+                    <th style="padding: 1rem 1.5rem; font-size: 0.8rem; color: #6B7280; text-transform: uppercase;">Organization</th>
+                    <th style="padding: 1rem 1.5rem; font-size: 0.8rem; color: #6B7280; text-transform: uppercase; text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in pending_admins %}
+                <tr style="border-bottom: 1px solid #F3F4F6;">
+                    <td style="padding: 1rem 1.5rem;">
+                        <strong style="color: #111827; display: block;">{{ admin.full_name }}</strong>
+                        <span style="font-size: 0.8rem; color: #6B7280;">{{ admin.email }}</span>
+                    </td>
+                    <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #374151;">
+                        {{ admin.organization.name if admin.organization else 'N/A' }}
+                    </td>
+                    <td style="padding: 1rem 1.5rem; text-align: right;">
+                        <form action="{{ url_for('superadmin.approve_admin', admin_id=admin.id) }}" method="POST" style="margin: 0;">
+                            <button type="submit" style="background-color: #10B981; color: white; padding: 0.4rem 0.8rem; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; font-size: 0.8rem; transition: background 0.2s;">
+                                Approve Access
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 3rem 1.5rem; text-align: center; color: #6B7280;">
+            <i class="fa-solid fa-check-circle" style="font-size: 2.5rem; color: #10B981; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p style="margin: 0;">All caught up! No pending admin applications.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- RIGHT COLUMN: Live Audit Logs -->
+    <div class="dashboard-panel">
+        <div class="panel-header">
+            <h2><i class="fa-solid fa-bolt" style="color: #F59E0B;"></i> System Activity</h2>
+            <a href="{{ url_for('superadmin.audit_logs') }}" style="font-size: 0.8rem; color: #0A66C2; text-decoration: none; font-weight: 500;">View All</a>
+        </div>
+        
+        <div class="log-feed">
+            {% if recent_logs %}
+                {% for log in recent_logs %}
+                    
+                    <!-- Dynamic styling based on action type -->
+                    {% set icon_class = 'icon-gray' %}
+                    {% set icon_fa = 'fa-clock-rotate-left' %}
+                    
+                    {% if 'CREATE' in log.action or 'APPROVE' in log.action or 'DEPLOY' in log.action %}
+                        {% set icon_class = 'icon-green' %}
+                        {% set icon_fa = 'fa-check' %}
+                    {% elif 'DELETE' in log.action or 'REJECT' in log.action or 'REVOKE' in log.action or 'SUSPEND' in log.action %}
+                        {% set icon_class = 'icon-red' %}
+                        {% set icon_fa = 'fa-xmark' %}
+                    {% elif 'UPDATE' in log.action %}
+                        {% set icon_class = 'icon-blue' %}
+                        {% set icon_fa = 'fa-pen' %}
+                    {% endif %}
+
+                    <div class="log-item">
+                        <div class="log-icon {{ icon_class }}">
+                            <i class="fa-solid {{ icon_fa }}"></i>
+                        </div>
+                        <div class="log-content">
+                            <p class="log-text">{{ log.description }}</p>
+                            <div class="log-meta">
+                                <span><i class="fa-regular fa-clock"></i> {{ log.timestamp.strftime('%b %d, %H:%M') }}</span>
+                                <span>&bull;</span>
+                                <span class="log-target">{{ log.actor_type }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; color: #9CA3AF; padding: 2rem 0;">
+                    <i class="fa-solid fa-list-ul" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                    <p style="font-size: 0.9rem;">No system activity recorded yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 {% endblock %}

@@ -1,0 +1,147 @@
+{% extends "sp_base.html" %}
+
+{% block title %}System Audit Logs | Super Admin{% endblock %}
+
+{% block content %}
+<style>
+    .filter-bar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: flex-end;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+    .form-group label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151;
+    }
+    .form-group input, .form-group select {
+        padding: 0.75rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 6px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+    }
+    
+    /* Dynamic Log Colors */
+    .badge-green { background-color: #D1FAE5; color: #059669; }
+    .badge-red { background-color: #FEE2E2; color: #DC2626; }
+    .badge-blue { background-color: #DBEAFE; color: #1D4ED8; }
+    .badge-gray { background-color: #F3F4F6; color: #4B5563; }
+</style>
+
+<div class="admin-header">
+    <h1>System Audit Logs</h1>
+    <p style="color: #6B7280; margin-top: 0.5rem;">Track, trace, and investigate all platform activity.</p>
+</div>
+
+<!-- Advanced Filter Bar -->
+<div class="filter-bar">
+    <form action="{{ url_for('superadmin.audit_logs') }}" method="GET" class="filter-grid">
+        
+        <div class="form-group">
+            <label for="start_datetime">From Date & Time</label>
+            <input type="datetime-local" id="start_datetime" name="start_datetime" value="{{ request.args.get('start_datetime', '') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="end_datetime">To Date & Time</label>
+            <input type="datetime-local" id="end_datetime" name="end_datetime" value="{{ request.args.get('end_datetime', '') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="actor_type">Actor Type</label>
+            <select name="actor_type" id="actor_type">
+                <option value="">All Actors</option>
+                <option value="SuperAdmin" {% if request.args.get('actor_type') == 'SuperAdmin' %}selected{% endif %}>Super Admin</option>
+                <option value="AssociationAdmin" {% if request.args.get('actor_type') == 'AssociationAdmin' %}selected{% endif %}>Association Admin</option>
+                <option value="System" {% if request.args.get('actor_type') == 'System' %}selected{% endif %}>System Auto</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="action_type">Action Category</label>
+            <select name="action_type" id="action_type">
+                <option value="">All Actions</option>
+                <option value="APPROVE" {% if request.args.get('action_type') == 'APPROVE' %}selected{% endif %}>Approvals</option>
+                <option value="REJECT" {% if request.args.get('action_type') == 'REJECT' %}selected{% endif %}>Rejections</option>
+                <option value="CREATE" {% if request.args.get('action_type') == 'CREATE' %}selected{% endif %}>Creations</option>
+                <option value="DELETE" {% if request.args.get('action_type') == 'DELETE' %}selected{% endif %}>Deletions</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn-primary" style="flex: 1;"><i class="fa-solid fa-filter"></i> Filter</button>
+            <a href="{{ url_for('superadmin.audit_logs') }}" class="btn-primary" style="background-color: #E5E7EB; color: #374151; display: flex; align-items: center; justify-content: center; padding: 0 1rem;" title="Clear Filters">
+                <i class="fa-solid fa-rotate-right"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Log Data Table -->
+<div style="background: white; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background-color: #F9FAFB; border-bottom: 1px solid #E5E7EB;">
+                <th style="padding: 1rem 1.5rem; font-size: 0.85rem; color: #6B7280; text-transform: uppercase;">Date & Time (UTC)</th>
+                <th style="padding: 1rem 1.5rem; font-size: 0.85rem; color: #6B7280; text-transform: uppercase;">Actor</th>
+                <th style="padding: 1rem 1.5rem; font-size: 0.85rem; color: #6B7280; text-transform: uppercase;">Action Code</th>
+                <th style="padding: 1rem 1.5rem; font-size: 0.85rem; color: #6B7280; text-transform: uppercase;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            
+                {% set badge_class = 'badge-gray' %}
+                {% if 'APPROVE' in log.action or 'CREATE' in log.action or 'DEPLOY' in log.action %}
+                    {% set badge_class = 'badge-green' %}
+                {% elif 'REJECT' in log.action or 'DELETE' in log.action or 'REVOKE' in log.action %}
+                    {% set badge_class = 'badge-red' %}
+                {% elif 'UPDATE' in log.action %}
+                    {% set badge_class = 'badge-blue' %}
+                {% endif %}
+
+            <tr style="border-bottom: 1px solid #F3F4F6;">
+                <td style="padding: 1rem 1.5rem; font-family: monospace; font-size: 0.9rem; color: #4B5563;">
+                    {{ log.timestamp.strftime('%Y-%m-%d') }} <br>
+                    <strong style="color: #111827;">{{ log.timestamp.strftime('%H:%M:%S') }}</strong>
+                </td>
+                <td style="padding: 1rem 1.5rem;">
+                    <span style="display: block; font-weight: 600; color: #111827; font-size: 0.9rem;">{{ log.actor_type }}</span>
+                    <span style="font-size: 0.75rem; color: #6B7280; font-family: monospace;" title="Actor ID">{{ log.actor_id[:8] }}...</span>
+                </td>
+                <td style="padding: 1rem 1.5rem;">
+                    <span class="{{ badge_class }}" style="padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700;">
+                        {{ log.action }}
+                    </span>
+                </td>
+                <td style="padding: 1rem 1.5rem; font-size: 0.9rem; color: #374151;">
+                    {{ log.description }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="padding: 3rem; text-align: center; color: #6B7280;">
+                    <i class="fa-solid fa-magnifying-glass" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>No audit logs found matching your filters.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

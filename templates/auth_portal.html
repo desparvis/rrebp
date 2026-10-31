@@ -72,7 +72,8 @@
             </form>
 
             <!-- Registration form -->
-            <form action="/apply" method="POST" id="registerForm" class="auth-form">
+            <!-- CRITICAL: Added enctype="multipart/form-data" so the profile picture can actually upload to Cloudinary! -->
+            <form action="/apply" method="POST" id="registerForm" class="auth-form" enctype="multipart/form-data">
                 <input type="hidden" name="form_type" value="register">
 
                 <div class="form-group">
@@ -95,10 +96,35 @@
 
                 <!-- Broker information -->
                 <div id="broker_fields" style="display: flex; flex-direction: column; gap: 1rem;">
+                    
+                    <!-- NEW: Profile Picture Upload -->
+                    <div class="form-group">
+                        <label for="profile_picture">Profile Picture (Optional)</label>
+                        <input type="file" id="profile_picture" name="profile_picture" accept="image/png, image/jpeg, image/jpg" 
+                               style="width: 100%; padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 4px; background-color: white;">
+                        <small style="color: #6B7280; font-size: 0.8rem; margin-top: 0.25rem; display: block;">Upload a professional headshot for your public profile.</small>
+                    </div>
 
                     <div class="form-group">
                         <label for="phone">Phone Number <span style="color: red;">*</span></label>
                         <input type="tel" id="phone" name="phone">
+                    </div>
+
+                    <!-- NEW: Working Location Fields for Brokers -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="working_province">Working Province <span style="color: red;">*</span></label>
+                            <select id="working_province" name="working_province">
+                                <option value="" disabled selected>-- Select Province --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="working_district">Working District <span style="color: red;">*</span></label>
+                            <select id="working_district" name="working_district" disabled>
+                                <option value="" disabled selected>-- Select District --</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -198,11 +224,11 @@
             assocFields.style.display = 'none';
 
             brokerInputs.forEach(input => {
-                // Bio is strictly excluded from being required
-                if (input.name === 'phone' || input.name === 'organization_id' || input.name === 'professional_title') {
+                // Bio and Profile Picture are strictly excluded from being required
+                if (input.name === 'phone' || input.name === 'organization_id' || input.name === 'professional_title' || input.name === 'working_province' || input.name === 'working_district') {
                     input.required = true;
                 } else {
-                    input.required = false; // Bio
+                    input.required = false; // Bio, Profile Picture
                 }
             });
 
@@ -230,6 +256,42 @@
         }
     }
 
-    toggleRegistrationFields();
+    // --- NEW: Location JSON Parsing Logic ---
+    document.addEventListener("DOMContentLoaded", () => {
+        const provSelect = document.getElementById("working_province");
+        const distSelect = document.getElementById("working_district");
+        let locationData = [];
+
+        fetch("{{ url_for('static', filename='data/locations.json') }}")
+            .then(r => r.json())
+            .then(data => {
+                locationData = data;
+                populateDropdown(provSelect, getUniqueValues(data, "province_name"));
+            })
+            .catch(err => console.error("Failed to load locations:", err));
+
+        function getUniqueValues(dataArray, key) {
+            return [...new Set(dataArray.map(item => item[key]))].sort();
+        }
+
+        function populateDropdown(selectElement, values) {
+            const defaultText = selectElement.options[0].text;
+            selectElement.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
+            values.forEach(val => {
+                if (val) {
+                    selectElement.innerHTML += `<option value="${val}">${val}</option>`;
+                }
+            });
+            selectElement.disabled = values.length === 0;
+        }
+
+        provSelect.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => loc.province_name === e.target.value);
+            populateDropdown(distSelect, getUniqueValues(filtered, "district_name"));
+        });
+        
+        // Initialize fields properly on load
+        toggleRegistrationFields();
+    });
 </script>
 {% endblock %}

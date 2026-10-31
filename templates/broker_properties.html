@@ -4,8 +4,81 @@
 
 {% block content %}
 <style>
-    .table-container { background: white; border: 1px solid var(--border-grey); border-radius: 8px; overflow: hidden; margin-top: 1.5rem; }
-    .property-table { width: 100%; border-collapse: collapse; text-align: left; }
+    /* Filter Bar Styles */
+    .filter-topbar { 
+        background: white; 
+        padding: 1.5rem; 
+        border: 1px solid var(--border-grey); 
+        border-radius: 8px;
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .filter-form { 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 1rem; 
+        align-items: flex-end; 
+        width: 100%;
+    }
+    .filter-group { 
+        flex: 1; 
+        min-width: 140px; 
+        display: flex; 
+        flex-direction: column; 
+    }
+    .filter-group label { 
+        font-size: 0.85rem; 
+        font-weight: 600; 
+        color: #374151; 
+        margin-bottom: 0.5rem; 
+    }
+    .filter-group select, .filter-group input { 
+        padding: 0.75rem; 
+        border: 1px solid #D1D5DB; 
+        border-radius: 6px; 
+        font-family: inherit; 
+        width: 100%; 
+        box-sizing: border-box; 
+    }
+    .filter-row { display: flex; gap: 0.5rem; width: 100%; }
+    .filter-row input { width: 50%; }
+    .filter-actions { 
+        display: flex; 
+        gap: 0.5rem; 
+        align-items: flex-end; 
+        flex: 1; 
+        min-width: 200px; 
+    }
+    .filter-btn { 
+        background-color: #0A66C2; 
+        color: white; 
+        border: none; 
+        padding: 0.75rem 1.5rem; 
+        border-radius: 6px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        height: 42px; 
+        flex-grow: 1;
+        transition: background 0.2s; 
+    }
+    .filter-btn:hover { background-color: #084d96; }
+    .clear-btn { 
+        background-color: #E5E7EB; 
+        color: #374151; 
+        text-decoration: none; 
+        padding: 0.75rem 1rem; 
+        border-radius: 6px; 
+        font-weight: 600; 
+        height: 42px; 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center; 
+        box-sizing: border-box;
+    }
+
+    /* Table Styles */
+    .table-container { background: white; border: 1px solid var(--border-grey); border-radius: 8px; overflow-x: auto; }
+    .property-table { width: 100%; border-collapse: collapse; text-align: left; min-width: 800px; }
     .property-table th { background-color: #F9FAFB; padding: 1rem 1.5rem; font-size: 0.85rem; font-weight: 600; color: #4B5563; text-transform: uppercase; border-bottom: 1px solid var(--border-grey); }
     .property-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-grey); vertical-align: middle; color: #111827; }
     .property-table tr:last-child td { border-bottom: none; }
@@ -22,6 +95,12 @@
     .btn-edit:hover { background-color: #004182; }
     .btn-delete { background-color: #DC2626; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; }
     .btn-delete:hover { background-color: #B91C1C; }
+
+    @media (max-width: 768px) {
+        .filter-group { flex: unset; width: calc(50% - 0.5rem); min-width: 0; }
+        .filter-actions { width: 100%; flex: 100%; }
+        .admin-header { flex-direction: column; align-items: flex-start !important; gap: 1rem; }
+    }
 </style>
 
 <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center;">
@@ -30,6 +109,43 @@
         <p style="color: var(--text-muted); margin-top: 0.25rem;">Manage your real estate listings and check verification status.</p>
     </div>
     <a href="{{ url_for('broker.add_property') }}" class="btn-primary"><i class="fa-solid fa-plus"></i> Add New Property</a>
+</div>
+
+<div class="filter-topbar">
+    <form class="filter-form" action="{{ url_for('broker.my_properties') }}" method="GET">
+        <div class="filter-group">
+            <label>Type</label>
+            <select name="listing_type">
+                <option value="">All Types</option>
+                <option value="For Sale" {% if request.args.get('listing_type') == 'For Sale' %}selected{% endif %}>For Sale</option>
+                <option value="For Rent" {% if request.args.get('listing_type') == 'For Rent' %}selected{% endif %}>For Rent</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Province</label>
+            <select id="province" name="province"><option value="">Any</option></select>
+        </div>
+        <div class="filter-group">
+            <label>District</label>
+            <select id="district" name="district" disabled><option value="">Any</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Sector</label>
+            <select id="sector" name="sector" disabled><option value="">Any</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Cell</label>
+            <select id="cell" name="cell" disabled><option value="">Any</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Village</label>
+            <select id="village" name="village" disabled><option value="">Any</option></select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="filter-btn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            <a href="{{ url_for('broker.my_properties') }}" class="clear-btn" title="Clear Filters"><i class="fa-solid fa-rotate-right"></i></a>
+        </div>
+    </form>
 </div>
 
 <div class="table-container">
@@ -56,9 +172,11 @@
                         {% endif %}
                     </td>
                     <td>
-                        <!-- Text only, no link -->
                         <strong style="display: block; font-size: 1rem; color: #111827;">{{ property.title }}</strong>
-                        <span style="font-size: 0.85rem; color: #6B7280;">{{ property.location }} &bull; {{ property.listing_type }}</span>
+                        <span style="font-size: 0.85rem; color: #6B7280;">
+                            {% if property.village %}{{ property.village }}, {% endif %}
+                            {{ property.cell }}, {{ property.sector }} &bull; {{ property.listing_type }}
+                        </span>
                     </td>
                     <td style="font-family: monospace; font-weight: 600; font-size: 1.05rem;">
                         {{ "{:,.0f}".format(property.price) }}
@@ -74,8 +192,6 @@
                             <a href="{{ url_for('broker.edit_property', property_id=property.id) }}" class="btn-edit">
                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                             </a>
-                            
-                            <!-- Delete triggers the custom UI Modal automatically via the onsubmit attribute -->
                             <form action="{{ url_for('broker.delete_property', property_id=property.id) }}" method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to permanently delete this property and all its photos?');">
                                 <button type="submit" class="btn-delete">
                                     <i class="fa-solid fa-trash"></i>
@@ -89,11 +205,120 @@
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 3rem 1rem; color: #6B7280;">
                         <i class="fa-solid fa-house-circle-xmark" style="font-size: 2rem; margin-bottom: 1rem; color: #9CA3AF;"></i>
-                        <p>You haven't listed any properties yet.</p>
+                        <p>No properties match your search.</p>
                     </td>
                 </tr>
             {% endif %}
         </tbody>
     </table>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const selects = {
+            province: document.getElementById("province"),
+            district: document.getElementById("district"),
+            sector: document.getElementById("sector"),
+            cell: document.getElementById("cell"),
+            village: document.getElementById("village")
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedProvince = urlParams.get('province') || '';
+        const selectedDistrict = urlParams.get('district') || '';
+        const selectedSector = urlParams.get('sector') || '';
+        const selectedCell = urlParams.get('cell') || '';
+        const selectedVillage = urlParams.get('village') || '';
+
+        let locationData = [];
+
+        fetch("{{ url_for('static', filename='data/locations.json') }}")
+            .then(r => r.json())
+            .then(data => {
+                locationData = data;
+                populateDropdown(selects.province, getUniqueValues(data, "province_name"), selectedProvince);
+                
+                if (selectedProvince) {
+                    const distData = locationData.filter(loc => loc.province_name === selectedProvince);
+                    populateDropdown(selects.district, getUniqueValues(distData, "district_name"), selectedDistrict);
+                    
+                    if (selectedDistrict) {
+                        const secData = distData.filter(loc => loc.district_name === selectedDistrict);
+                        populateDropdown(selects.sector, getUniqueValues(secData, "sector_name"), selectedSector);
+                        
+                        if (selectedSector) {
+                            const cellData = secData.filter(loc => loc.sector_name === selectedSector);
+                            populateDropdown(selects.cell, getUniqueValues(cellData, "cell_name"), selectedCell);
+                            
+                            if (selectedCell) {
+                                const villageData = cellData.filter(loc => loc.cell_name === selectedCell);
+                                populateDropdown(selects.village, getUniqueValues(villageData, "village_name"), selectedVillage);
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error("Failed to load locations:", err));
+
+        function getUniqueValues(dataArray, key) {
+            return [...new Set(dataArray.map(item => item[key]))].sort();
+        }
+
+        function populateDropdown(selectElement, values, selectedValue = '') {
+            const defaultText = selectElement.options[0].text;
+            selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+            values.forEach(val => {
+                if (val) {
+                    const isSelected = val === selectedValue ? 'selected' : '';
+                    selectElement.innerHTML += `<option value="${val}" ${isSelected}>${val}</option>`;
+                }
+            });
+            selectElement.disabled = values.length === 0;
+        }
+
+        selects.province.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => loc.province_name === e.target.value);
+            populateDropdown(selects.district, getUniqueValues(filtered, "district_name"));
+            populateDropdown(selects.sector, []);
+            populateDropdown(selects.cell, []);
+            populateDropdown(selects.village, []);
+            selects.sector.disabled = true;
+            selects.cell.disabled = true;
+            selects.village.disabled = true;
+        });
+
+        selects.district.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === e.target.value
+            );
+            populateDropdown(selects.sector, getUniqueValues(filtered, "sector_name"));
+            populateDropdown(selects.cell, []);
+            populateDropdown(selects.village, []);
+            selects.cell.disabled = true;
+            selects.village.disabled = true;
+        });
+
+        selects.sector.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === selects.district.value &&
+                loc.sector_name === e.target.value
+            );
+            populateDropdown(selects.cell, getUniqueValues(filtered, "cell_name"));
+            populateDropdown(selects.village, []);
+            selects.village.disabled = true;
+        });
+
+        selects.cell.addEventListener("change", (e) => {
+            const filtered = locationData.filter(loc => 
+                loc.province_name === selects.province.value && 
+                loc.district_name === selects.district.value &&
+                loc.sector_name === selects.sector.value &&
+                loc.cell_name === e.target.value
+            );
+            populateDropdown(selects.village, getUniqueValues(filtered, "village_name"));
+        });
+    });
+</script>
 {% endblock %}
