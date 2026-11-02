@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request
 from functools import wraps
-from models import db, Broker, Organization, Property, Review, PropertyImage
+from models import db, Broker, Organization, Property, Review, PropertyImage, AuditLog
 import random
 import string
 import cloudinary.uploader
 import cloudinary.api
+from werkzeug.security import generate_password_hash, check_password_hash
 
 broker_bp = Blueprint('broker', __name__, template_folder="templates", static_folder="static")
 
@@ -239,3 +240,107 @@ def my_reviews():
         avg_rating = round(sum(r.rating for r in approved_reviews) / len(approved_reviews), 1)
         
     return render_template('broker_reviews.html', broker=broker, reviews=reviews, avg_rating=avg_rating)
+
+@broker_bp.route('/brokerdash/settings', methods=['GET', 'POST'])
+def settings():
+    if 'broker_id' not in session:
+        return redirect(url_for('landing.login_portal'))
+        
+    broker_id = session['broker_id']
+    broker = Broker.query.get_or_404(broker_id)
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        # ==========================================
+        # 1. PROFILE UPDATE & RE-VERIFICATION
+        # ==========================================
+        if action == 'update_profile':
+            broker.phone = request.form.get('phone')
+            broker.professional_title = request.form.get('professional_title')
+            broker.bio = request.form.get('bio')
+            
+            # Handle Cloudinary Profile Picture Upload
+            if 'profile_picture' in request.files:
+                file = request.files['profile_picture']
+                if file and file.filename != '':
+                    try:
+                        upload_result = cloudinary.uploader.upload(
+                            file,
+                            folder="rrebp_broker_profiles"
+                        )
+                        broker.profile_photo_url = upload_result.get('secure_url')
+                    except Exception as e:
+                        print(f"Cloudinary upload failed: {str(e)}")
+                        flash("Profile picture upload failed, but other details were saved.", "warning")
+
+            # THE FLIP: Send them back to the Admin's review queue
+            broker.status = 'Pending Approval'
+            
+            # Log the security event
+            log = AuditLog(
+                actor_type="Broker",
+                actor_id=broker.id,
+                action="UPDATE_PROFILE",
+                target_type="Broker",
+                target_id=broker.id,
+                description="Broker updated profile details, triggering re-verification workflow."
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            flash("Profile updated! Your account is now paused pending Admin re-verification.", "info")
+            # Redirect to dashboard since they are now pending and shouldn't be editing active settings
+            return redirect(url_for('broker.dashboard'))
+
+        # ==========================================
+        # 2. SECURE PASSWORD CHANGE
+        # ==========================================
+        elif action == 'update_password':
+            current_password = request.form.get('current_password')
+            new_password = request.form.get('new_password')
+
+            if not check_password_hash(broker.password_hash, current_password):
+                flash("Incorrect current password. Security check failed.", "error")
+            elif len(new_password) < 8:
+                flash("New password must be at least 8 characters long.", "error")
+            else:
+                broker.password_hash = generate_password_hash(new_password)
+                
+                log = AuditLog(
+                    actor_type="Broker",
+                    actor_id=broker.id,
+                    action="CHANGE_PASSWORD",
+                    target_type="Broker",
+                    target_id=broker.id,
+                    description="Broker updated their password securely via settings."
+                )
+                db.session.add(log)
+                db.session.commit()
+                
+                flash("Password updated successfully.", "success")
+                
+            return redirect(url_for('broker.settings'))
+
+        # ==========================================
+        # 3. NUKE ACCOUNT
+        # ==========================================
+        elif action == 'delete_account':
+            db.session.delete(broker)
+            
+            log = AuditLog(
+                actor_type="Broker",
+                actor_id=broker_id,
+                action="DELETE_ACCOUNT",
+                target_type="Broker",
+                target_id=broker_id,
+                description="Broker permanently deleted their own account."
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            session.pop('broker_id', None)
+            flash("Your account has been permanently deleted.", "info")
+            return redirect(url_for('landing.home'))
+
+    return render_template("broker_settings.html", broker=broker)

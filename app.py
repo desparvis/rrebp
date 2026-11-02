@@ -3,7 +3,7 @@ from landing import landing
 from superadmin import superadmin
 from association import association
 from broker import broker_bp
-from models import db
+from models import db, mail
 import os
 from dotenv import load_dotenv
 import cloudinary
@@ -14,9 +14,22 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
-app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///rrebp.db'
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv('DATABASE_URL')
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# ==========================================
+# EMAIL CONFIGURATION
+# ==========================================
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
+
+# ==========================================
+# CLOUDINARY CONFIGURATION
+# ==========================================
 cloudinary.config(
     cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'),
     api_key = os.getenv('CLOUDINARY_API_KEY'),
@@ -24,8 +37,9 @@ cloudinary.config(
     secure = True
 )
 
-# Initializing the database
+# Initializing extensions
 db.init_app(app)
+mail.init_app(app)
 
 # Blueprint registration
 app.register_blueprint(landing)

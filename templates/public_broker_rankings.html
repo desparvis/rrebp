@@ -223,11 +223,15 @@
 
     <div class="broker-list">
         {% for stat in broker_stats %}
+        
+        <!-- Logic to keep the rank number correct across paginated pages (e.g., #11 on page 2) -->
+        {% set rank = loop.index + ((page - 1) * 10) %}
+        
         <a href="{{ url_for('landing.public_broker_profile', broker_id=stat.broker.id) }}"
-            class="broker-row rank-{{ loop.index }}">
+            class="broker-row rank-{{ rank }}">
 
             <div class="rank-and-profile">
-                <div class="rank-badge">#{{ loop.index }}</div>
+                <div class="rank-badge">#{{ rank }}</div>
                 {% if stat.broker.profile_photo_url %}
                     <img src="{{ stat.broker.profile_photo_url }}" alt="{{ stat.broker.full_name }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
                 {% else %}
@@ -263,5 +267,42 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- NEW: Broker Pagination UI -->
+    {% if total_pages > 1 %}
+    <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #E5E7EB;">
+        
+        <!-- Previous Button -->
+        {% if has_prev %}
+            <a href="{{ url_for('landing.broker_rankings', page=page-1) }}" 
+               style="padding: 0.5rem 1rem; border: 1px solid #D1D5DB; border-radius: 6px; color: #374151; text-decoration: none; font-weight: 600; background: white;">
+                &larr; Previous
+            </a>
+        {% else %}
+            <span style="padding: 0.5rem 1rem; border: 1px solid #E5E7EB; border-radius: 6px; color: #9CA3AF; font-weight: 600; background: #F9FAFB; cursor: not-allowed;">
+                &larr; Previous
+            </span>
+        {% endif %}
+        
+        <!-- Page Indicator -->
+        <span style="font-size: 0.95rem; color: #4B5563; font-weight: 500;">
+            Page <strong style="color: #111827;">{{ page }}</strong> of <strong style="color: #111827;">{{ total_pages }}</strong>
+        </span>
+
+        <!-- Next Button -->
+        {% if has_next %}
+            <a href="{{ url_for('landing.broker_rankings', page=page+1) }}" 
+               style="padding: 0.5rem 1rem; border: 1px solid #0A66C2; border-radius: 6px; color: white; text-decoration: none; font-weight: 600; background: #0A66C2;">
+                Next &rarr;
+            </a>
+        {% else %}
+            <span style="padding: 0.5rem 1rem; border: 1px solid #E5E7EB; border-radius: 6px; color: #9CA3AF; font-weight: 600; background: #F9FAFB; cursor: not-allowed;">
+                Next &rarr;
+            </span>
+        {% endif %}
+        
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}

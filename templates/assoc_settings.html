@@ -1,54 +1,141 @@
 {% extends "assoc_base.html" %}
-{% block title %}Wallet Settings | {{ current_admin.organization.name }}{% endblock %}
+{% block title %}Account Settings | {{ current_admin.organization.name }}{% endblock %}
 
 {% block content %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="application/javascript"></script>
 
-<div class="admin-header">
-    <div>
-        <h1>Wallet Settings</h1>
-        <p style="color: #6B7280; margin-top: 0.25rem;">Link your Web3 wallet for blockchain authorization.</p>
-    </div>
-</div>
-
-<div style="background-color: white; padding: 2.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 600px;">
+<div style="padding: 2rem; max-width: 900px; margin: 0 auto;">
     
-    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-        <div style="background-color: #FDF4E6; padding: 1rem; border-radius: 8px;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" style="width: 40px; height: 40px;">
-        </div>
-        <div>
-            <h2 style="margin: 0; font-size: 1.25rem; color: #111827;">MetaMask Connection</h2>
-            <p style="margin: 0; color: #6B7280; font-size: 0.9rem;">The Super Admin will authorize this address.</p>
-        </div>
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.75rem; color: #111827; margin: 0;">Account Settings</h1>
+        <p style="color: #6B7280; margin-top: 0.25rem;">Manage your organization identity, web3 wallet, and security credentials.</p>
     </div>
 
-    <div style="background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 1.5rem; margin-bottom: 2rem;">
-        <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.5rem; font-weight: 500;">Current Connected Wallet:</span>
+    <!-- 1. METAMASK WALLET CARD (Your original design) -->
+    <div style="background-color: white; padding: 2.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background-color: #FDF4E6; padding: 1rem; border-radius: 8px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" style="width: 40px; height: 40px;">
+            </div>
+            <div>
+                <h2 style="margin: 0; font-size: 1.25rem; color: #111827;">MetaMask Connection</h2>
+                <p style="margin: 0; color: #6B7280; font-size: 0.9rem;">The Super Admin will authorize this address.</p>
+            </div>
+        </div>
+
+        <div style="background-color: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 1.5rem; margin-bottom: 2rem;">
+            <span style="display: block; font-size: 0.85rem; color: #6B7280; margin-bottom: 0.5rem; font-weight: 500;">Current Connected Wallet:</span>
+            
+            {% if current_admin.wallet_address %}
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: #059669; font-weight: 600;">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span style="font-family: monospace; font-size: 1.1rem; word-break: break-all;">{{ current_admin.wallet_address }}</span>
+                </div>
+            {% else %}
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: #DC2626; font-weight: 500;">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    <span>No wallet linked. You cannot manage brokers on-chain yet.</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <button onclick="connectWallet()" style="background-color: #F5841F; color: white; border: none; padding: 1rem 2rem; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: background-color 0.2s;">
+            <i class="fa-solid fa-link"></i> 
+            {{ 'Update Wallet Address' if current_admin.wallet_address else 'Connect MetaMask Wallet' }}
+        </button>
+    </div>
+
+    <!-- 2. PROFILE UPDATE CARD -->
+    <div style="background: white; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="padding: 1.5rem; border-bottom: 1px solid #E5E7EB;">
+            <h2 style="font-size: 1.25rem; color: #111827; margin: 0;">Identity Details</h2>
+        </div>
         
-        {% if current_admin.wallet_address %}
-            <div style="display: flex; align-items: center; gap: 0.5rem; color: #059669; font-weight: 600;">
-                <i class="fa-solid fa-circle-check"></i>
-                <span style="font-family: monospace; font-size: 1.1rem; word-break: break-all;">{{ current_admin.wallet_address }}</span>
+        <form action="{{ url_for('association.settings') }}" method="POST" style="padding: 1.5rem;">
+            <input type="hidden" name="action" value="update_profile">
+            
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label style="font-size: 0.9rem; font-weight: 600; color: #374151;">Organization</label>
+                    <input type="text" value="{{ current_admin.organization.name }}" disabled style="padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px; background-color: #F9FAFB; color: #6B7280; cursor: not-allowed;">
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label style="font-size: 0.9rem; font-weight: 600; color: #374151;">Login Email (Immutable)</label>
+                    <input type="email" value="{{ current_admin.email }}" disabled style="padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px; background-color: #F9FAFB; color: #6B7280; cursor: not-allowed;">
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label for="full_name" style="font-size: 0.9rem; font-weight: 600; color: #374151;">Admin Full Name</label>
+                    <input type="text" id="full_name" name="full_name" value="{{ current_admin.full_name }}" required style="padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px; font-family: inherit;">
+                    <small style="color: #D97706; font-size: 0.85rem;"><i class="fa-solid fa-circle-info"></i> Changing this will suspend your account until the Super Admin verifies the change.</small>
+                </div>
             </div>
-        {% else %}
-            <div style="display: flex; align-items: center; gap: 0.5rem; color: #DC2626; font-weight: 500;">
-                <i class="fa-solid fa-circle-xmark"></i>
-                <span>No wallet linked. You cannot manage brokers on-chain yet.</span>
+
+            <div style="text-align: right;">
+                <button type="submit" style="background-color: #1F2937; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    Save Identity Changes
+                </button>
             </div>
-        {% endif %}
+        </form>
     </div>
 
-    <button onclick="connectWallet()" style="background-color: #F5841F; color: white; border: none; width: 100%; padding: 1rem; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.75rem; transition: background-color 0.2s;">
-        <i class="fa-solid fa-link"></i> 
-        {{ 'Update Wallet Address' if current_admin.wallet_address else 'Connect MetaMask Wallet' }}
-    </button>
+    <!-- 3. SECURITY CARD -->
+    <div style="background: white; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="padding: 1.5rem; border-bottom: 1px solid #E5E7EB;">
+            <h2 style="font-size: 1.25rem; color: #111827; margin: 0;">Change Password</h2>
+        </div>
+        
+        <form action="{{ url_for('association.settings') }}" method="POST" style="padding: 1.5rem;">
+            <input type="hidden" name="action" value="update_password">
+            
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 500px; margin-bottom: 1.5rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label for="current_password" style="font-size: 0.9rem; font-weight: 600; color: #374151;">Current Password</label>
+                    <input type="password" id="current_password" name="current_password" required style="padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px;">
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label for="new_password" style="font-size: 0.9rem; font-weight: 600; color: #374151;">New Password (Min. 8 characters)</label>
+                    <input type="password" id="new_password" name="new_password" required minlength="8" style="padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px;">
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" style="background-color: #4B5563; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    Update Password
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 4. DANGER ZONE CARD -->
+    <div style="background: white; border: 1px solid #FECACA; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="padding: 1.5rem; border-bottom: 1px solid #FECACA; background-color: #FEF2F2; border-radius: 8px 8px 0 0;">
+            <h2 style="font-size: 1.25rem; color: #991B1B; margin: 0;">Danger Zone</h2>
+        </div>
+        
+        <div style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h3 style="font-size: 1rem; color: #111827; margin: 0 0 0.25rem 0;">Delete Account</h3>
+                <p style="color: #6B7280; font-size: 0.9rem; margin: 0;">This will permanently delete your admin access. Your organization and brokers will remain intact.</p>
+            </div>
+            
+            <form action="{{ url_for('association.settings') }}" method="POST" onsubmit="return confirm('WARNING: Are you absolutely sure you want to permanently delete your admin account?');">
+                <input type="hidden" name="action" value="delete_account">
+                <button type="submit" style="background-color: #DC2626; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">
+                    Delete Admin Account
+                </button>
+            </form>
+        </div>
+    </div>
+
 </div>
 
+<!-- Your original script remains identical -->
 <script>
     async function connectWallet() {
         if (typeof window.ethereum === 'undefined') {
-            // Using your new global loader logic instead of alert!
             showLoader("Please install MetaMask to continue.");
             setTimeout(hideLoader, 3000);
             return;

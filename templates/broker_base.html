@@ -32,14 +32,20 @@
                     <i class="fa-solid fa-house"></i> Overview
                 </a>
 
-                <!-- THE FIX: Linked directly to the my_properties route -->
                 <a href="{{ url_for('broker.my_properties') }}"
                     class="{% if 'properties' in request.path %}active{% endif %}">
                     <i class="fa-solid fa-city"></i> My Properties
                 </a>
 
-                <a href="{{ url_for('broker.my_reviews') }}" class="nav-item">
+                <a href="{{ url_for('broker.my_reviews') }}" 
+                   class="{% if 'reviews' in request.path %}active{% endif %}">
                     <i class="fa-solid fa-star"></i> Client Reviews
+                </a>
+
+                <!-- NEW: Account Settings Link -->
+                <a href="{{ url_for('broker.settings') }}" 
+                   class="{% if 'settings' in request.path %}active{% endif %}">
+                    <i class="fa-solid fa-gear"></i> Account Settings
                 </a>
 
                 <a href="{{ url_for('broker.logout') }}" style="margin-top: auto; border-top: 1px solid #334155;">

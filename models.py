@@ -1,8 +1,10 @@
 import uuid
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail
 
 db = SQLAlchemy()
+mail = Mail()
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -74,7 +76,7 @@ class Broker(db.Model):
     
     verification_code = db.Column(db.String(255), nullable=True) 
     
-    # Secure code for clients to leave reviews
+    # Secure code for clients to leave reviews (WE WILL USE THIS!)
     review_code = db.Column(db.String(20), unique=True, nullable=True)
     
     status = db.Column(db.String(20), default='Pending Registration')
@@ -82,7 +84,6 @@ class Broker(db.Model):
     verified_at = db.Column(db.DateTime, nullable=True)
     expires_at = db.Column(db.DateTime, nullable=True)
     
-    # FIX: Made nullable=True to allow public self-registration without breaking the database
     registered_by = db.Column(db.String(36), db.ForeignKey('association_admins.id'), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -101,23 +102,21 @@ class Property(db.Model):
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text, nullable=False)
     price = db.Column(db.Numeric(12, 2), nullable=False)
-    listing_type = db.Column(db.String(50), nullable=False) # e.g., 'For Rent', 'For Sale'
+    listing_type = db.Column(db.String(50), nullable=False) 
     
-    # Bedrooms and Bathrooms
     bedrooms = db.Column(db.Integer, nullable=True)
     bathrooms = db.Column(db.Integer, nullable=True)
     
-    # Direct string columns for locations (handled by static JSON on frontend)
     province = db.Column(db.String(100), nullable=False)
     district = db.Column(db.String(100), nullable=False)
     sector = db.Column(db.String(100), nullable=False)
     cell = db.Column(db.String(100), nullable=False)
     village = db.Column(db.String(100), nullable=False)
     
-    property_image = db.Column(db.String(255), nullable=True) # Cloudinary URL
-    upi_number = db.Column(db.String(50), nullable=True) # Land Documentation Number
+    property_image = db.Column(db.String(255), nullable=True) 
+    upi_number = db.Column(db.String(50), nullable=True) 
     
-    verification_status = db.Column(db.String(50), default='Pending') # Pending, Verified, Rejected
+    verification_status = db.Column(db.String(50), default='Pending') 
     is_available = db.Column(db.Boolean, default=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -145,14 +144,11 @@ class PropertyImage(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     property_id = db.Column(db.String(36), db.ForeignKey('properties.id'), nullable=False)
     
-    # Cloudinary URL
     image_url = db.Column(db.String(255), nullable=False)
-    
     public_id = db.Column(db.String(255), nullable=False) 
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Audit logs
 class AuditLog(db.Model):
     __tablename__ = 'audit_logs'
     

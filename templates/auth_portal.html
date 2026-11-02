@@ -29,15 +29,6 @@
         </div>
 
         <div class="auth-body">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash-msg {{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
 
             <!-- Login Form -->
             <form action="/login" method="POST" id="loginForm" class="auth-form active">
@@ -64,6 +55,10 @@
                         <i class="fa-solid fa-eye" onclick="togglePassword('login_password', this)"
                             style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6B7280;"></i>
                     </div>
+                </div>
+
+                <div style="text-align: right; margin-top: -0.5rem; margin-bottom: 1rem;">
+                    <a href="{{ url_for('landing.forgot_password') }}" style="color: #0A66C2; font-size: 0.85rem; text-decoration: none; font-weight: 600;">Forgot Password?</a>
                 </div>
 
                 <button type="submit" class="btn-primary" style="padding: 0.85rem; font-size: 1rem; width: 100%;">

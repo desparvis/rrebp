@@ -6,7 +6,7 @@
 <style>
     .settings-wrapper {
         max-width: 900px;
-        margin: 0 auto;
+        margin: 0 auto 2rem auto;
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
@@ -133,6 +133,18 @@
     }
     .btn-save:hover { background-color: #004182; }
 
+    /* Security and Danger Zone styling */
+    .security-form {
+        padding: 2.5rem 2rem;
+    }
+    .danger-zone {
+        border-color: #FECACA !important;
+    }
+    .danger-header {
+        background-color: #FEF2F2 !important;
+        border-bottom-color: #FECACA !important;
+    }
+
     @media (max-width: 768px) {
         .settings-body {
             grid-template-columns: 1fr;
@@ -141,19 +153,21 @@
     }
 </style>
 
+<!-- 1. PROFILE SETTINGS WRAPPER -->
 <div class="settings-wrapper">
     <div class="settings-header">
         <h1>Profile Settings</h1>
         <p>Update your public information and how clients contact you.</p>
     </div>
 
-    <!-- The enctype is CRITICAL for uploading images -->
+    <!-- ADDED: hidden input for action routing -->
     <form action="{{ url_for('broker.settings') }}" method="POST" enctype="multipart/form-data" class="settings-body">
+        <input type="hidden" name="action" value="update_profile">
         
         <!-- Left Column: Avatar -->
         <div class="avatar-section">
-            {% if broker.profile_picture and broker.profile_picture != 'default_avatar.png' %}
-                <img src="{{ url_for('static', filename='uploads/profiles/' + broker.profile_picture) }}" alt="Profile" class="avatar-preview">
+            {% if broker.profile_photo_url %}
+                <img src="{{ broker.profile_photo_url }}" alt="Profile" class="avatar-preview">
             {% else %}
                 <div class="avatar-preview">
                     <i class="fa-solid fa-user"></i>
@@ -202,7 +216,53 @@
 
             <button type="submit" class="btn-save">Save Changes</button>
         </div>
-
     </form>
+</div>
+
+<!-- 2. SECURITY WRAPPER -->
+<div class="settings-wrapper">
+    <div class="settings-header">
+        <h1>Security</h1>
+        <p>Update your password to keep your account secure.</p>
+    </div>
+    
+    <form action="{{ url_for('broker.settings') }}" method="POST" class="security-form">
+        <input type="hidden" name="action" value="update_password">
+        
+        <div style="max-width: 500px;">
+            <div class="form-group">
+                <label for="current_password">Current Password</label>
+                <input type="password" id="current_password" name="current_password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="new_password">New Password (Min. 8 characters)</label>
+                <input type="password" id="new_password" name="new_password" required minlength="8">
+            </div>
+            
+            <button type="submit" class="btn-save" style="background-color: #1F2937;">Update Password</button>
+        </div>
+    </form>
+</div>
+
+<!-- 3. DANGER ZONE WRAPPER -->
+<div class="settings-wrapper danger-zone">
+    <div class="settings-header danger-header">
+        <h1 style="color: #991B1B;">Danger Zone</h1>
+    </div>
+    
+    <div style="padding: 2.5rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; color: #111827;">Delete Account</h3>
+            <p style="margin: 0; color: #6B7280; font-size: 0.95rem;">Once you delete your account, there is no going back. All properties will be lost.</p>
+        </div>
+        
+        <form action="{{ url_for('broker.settings') }}" method="POST" onsubmit="return confirm('WARNING: Are you absolutely sure you want to permanently delete your account?');">
+            <input type="hidden" name="action" value="delete_account">
+            <button type="submit" style="background-color: #DC2626; color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                Delete Account
+            </button>
+        </form>
+    </div>
 </div>
 {% endblock %}

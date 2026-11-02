@@ -1,13 +1,28 @@
 from flask import redirect, url_for, render_template, session, flash, request, Blueprint
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Organization, AssociationAdmin, SuperAdmin, Broker, Property, Review
+from models import db, Organization, AssociationAdmin, SuperAdmin, Broker, Property, Review, AuditLog
 import uuid
 from datetime import datetime
 import random
 import cloudinary
 import cloudinary.uploader
+import string
+from flask import current_app
+from flask_mail import Message
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from models import mail
 
 landing = Blueprint('landing', __name__, template_folder="templates", static_folder="static")
+
+def generate_new_review_code():
+    """Generates a secure 8-character uppercase code and ensures it is unique"""
+    while True:
+        random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        new_code = f"RWA-{random_chars}"
+        
+        # Ensure no other broker has this exact code right now
+        if not Broker.query.filter_by(review_code=new_code).first():
+            return new_code
 
 @landing.route('/')
 def home():
@@ -263,12 +278,14 @@ def leave_review():
         rating = request.form.get('rating', type=int)
         comment = request.form.get('comment')
         
+        # Look up the broker by the submitted code
         broker = Broker.query.filter_by(review_code=review_code).first()
         
         if not broker:
-            flash("Invalid Review Code. Please check the code and try again.", "error")
+            flash("Invalid Review Code. It may have already been used or entered incorrectly.", "error")
             return redirect(url_for('landing.leave_review'))
             
+        # Save the new review
         new_review = Review(
             broker_id=broker.id,
             client_name=client_name,
@@ -277,6 +294,23 @@ def leave_review():
             is_approved=False 
         )
         db.session.add(new_review)
+        
+        # Rotate the broker's code instantly
+        old_code = broker.review_code
+        new_code = generate_new_review_code()
+        broker.review_code = new_code
+        
+        # Optional: Log the code rotation for security tracking
+        log = AuditLog(
+            action="ROTATE_REVIEW_CODE",
+            actor_type="System",
+            actor_id="Auto",
+            target_type="Broker",
+            target_id=broker.id,
+            description=f"Review code rotated after successful submission by {client_name}"
+        )
+        db.session.add(log)
+        
         db.session.commit()
         
         flash(f"Thank you! Your review for {broker.full_name} has been submitted for moderation.", "success")
@@ -286,6 +320,10 @@ def leave_review():
 
 @landing.route('/broker-rankings')
 def broker_rankings():
+    # 1. Get current page (default to 1) and set limit per page
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     brokers = Broker.query.filter_by(status='Active').all()
     
     broker_stats = []
@@ -306,9 +344,37 @@ def broker_rankings():
             'review_count': len(approved_reviews)
         })
         
+    # Sort brokers by highest rating first, then by most reviews
     broker_stats.sort(key=lambda x: (x['avg_rating'], x['review_count']), reverse=True)
     
-    return render_template('public_broker_rankings.html', broker_stats=broker_stats)
+    # 2. Perform List Slicing Pagination
+    total_brokers = len(broker_stats)
+    total_pages = (total_brokers + per_page - 1) // per_page
+    
+    # Failsafe if user types a crazy page number in URL
+    if page < 1:
+        page = 1
+    elif page > total_pages and total_pages > 0:
+        page = total_pages
+        
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    
+    # Slice the exact 10 brokers for the current page
+    paginated_stats = broker_stats[start_idx:end_idx]
+    
+    # Calculate button states
+    has_prev = page > 1
+    has_next = page < total_pages
+    
+    return render_template(
+        'public_broker_rankings.html', 
+        broker_stats=paginated_stats,
+        page=page,
+        total_pages=total_pages,
+        has_prev=has_prev,
+        has_next=has_next
+    )
 
 @landing.route('/broker/<broker_id>')
 def public_broker_profile(broker_id):
@@ -339,3 +405,90 @@ def public_broker_profile(broker_id):
         reviews=reviews, 
         avg_rating=avg_rating
     )
+
+# Password Reset functions
+
+def get_reset_serializer():
+    """Generates a secure token serializer using the app's secret key"""
+    return URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+
+@landing.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        role = request.form.get('role')
+        
+        # Find the user based on their role
+        user = None
+        if role == 'broker':
+            user = Broker.query.filter_by(email=email).first()
+        elif role == 'association':
+            user = AssociationAdmin.query.filter_by(email=email).first()
+            
+        #If user exists, generate token and send email
+        if user:
+            s = get_reset_serializer()
+            # We bundle their email and role into the encrypted token
+            token = s.dumps({'email': user.email, 'role': role}, salt='password-reset-salt')
+            
+            reset_url = url_for('landing.reset_password', token=token, _external=True)
+            
+            # Craft the email
+            msg = Message("Reset Your RREBP Password", recipients=[user.email])
+            msg.body = f"""Hello {user.full_name},
+
+You requested a password reset for your RREBP account.
+Click the link below to set a new password. This link will expire in 1 hour.
+
+{reset_url}
+
+If you did not request this, you can safely ignore this email.
+"""
+            try:
+                mail.send(msg)
+            except Exception as e:
+                print(f"Mail error: {e}")
+                flash("Error sending email. Please contact support.", "error")
+                return redirect(url_for('landing.forgot_password'))
+                
+        # Security best practice: Always say the same thing whether the email exists or not
+        # so hackers can't use this form to guess which emails are registered.
+        flash("If an account exists with that email, a password reset link has been sent.", "info")
+        return redirect(url_for('landing.login_portal'))
+        
+    return render_template('public_forgot_password.html')
+
+@landing.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    s = get_reset_serializer()
+    
+    try:
+        # 1. Decrypt token (max_age=3600 seconds = 1 hour)
+        data = s.loads(token, salt='password-reset-salt', max_age=3600)
+        email = data.get('email')
+        role = data.get('role')
+    except SignatureExpired:
+        flash("The password reset link has expired. Please request a new one.", "error")
+        return redirect(url_for('landing.forgot_password'))
+    except BadSignature:
+        flash("Invalid password reset link.", "error")
+        return redirect(url_for('landing.forgot_password'))
+        
+    if request.method == 'POST':
+        new_password = request.form.get('password')
+        hashed_password = generate_password_hash(new_password)
+        
+        # 2. Update the correct database table
+        user = None
+        if role == 'broker':
+            user = Broker.query.filter_by(email=email).first()
+        elif role == 'association':
+            user = AssociationAdmin.query.filter_by(email=email).first()
+            
+        if user:
+            user.password_hash = hashed_password
+            db.session.commit()
+            flash("Your password has been successfully reset! You can now log in.", "success")
+            return redirect(url_for('landing.login_portal'))
+            
+    return render_template('public_reset_password.html', token=token)

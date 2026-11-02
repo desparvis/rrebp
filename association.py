@@ -2,8 +2,24 @@ from flask import Blueprint, render_template, redirect, url_for, session, reques
 from functools import wraps
 from models import db, AssociationAdmin, Organization, Broker, Property, Review, AuditLog
 from datetime import datetime, timezone
+import random
+import string
+from werkzeug.security import generate_password_hash, check_password_hash
 
 association = Blueprint('association', __name__, template_folder="templates", static_folder="static")
+
+# ==========================================
+# REVIEW CODE HELPER
+# ==========================================
+def generate_new_review_code():
+    """Generates a secure 8-character uppercase code and ensures it is unique"""
+    while True:
+        random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        new_code = f"RWA-{random_chars}"
+        
+        # Ensure no other broker has this exact code right now
+        if not Broker.query.filter_by(review_code=new_code).first():
+            return new_code
 
 # ==========================================
 # AUDIT LOG HELPER
@@ -113,19 +129,6 @@ def review_broker(broker_id):
         
     return render_template("assoc_broker_review.html", broker=broker)
 
-@association.route('/assocdash/brokers/<broker_id>/approve', methods=['POST'])
-@assoc_login_required 
-def approve_broker(broker_id):
-    broker = Broker.query.get_or_404(broker_id)
-    broker.status = 'Pending Registration'
-    db.session.commit()
-    
-    # AUDIT LOG
-    log_audit_action(session['assoc_admin_id'], 'APPROVE_BROKER', 'Broker', broker.id, f"Approved broker application: {broker.full_name}")
-    
-    flash(f"Broker {broker.full_name} approved. They are now ready for on-chain deployment.", "success")
-    return redirect(url_for('association.brokers'))
-
 @association.route('/assocdash/brokers/<broker_id>/reject', methods=['POST'])
 @assoc_login_required
 def reject_broker(broker_id):
@@ -149,6 +152,7 @@ def verify_broker(broker_id):
     
     broker.verification_code = data.get('broker_hash')
     broker.status = 'Active'
+    broker.review_code = generate_new_review_code()
     broker.verified_at = datetime.now(timezone.utc)
     db.session.commit()
     
@@ -186,27 +190,6 @@ def delete_broker(broker_id):
     flash("Broker removed from system.", "error")
     return redirect(url_for('association.brokers'))
 
-@association.route('/assocdash/settings', methods=['GET', 'POST'])
-@assoc_login_required
-def settings():
-    admin = AssociationAdmin.query.get(session['assoc_admin_id'])
-    
-    if request.method == 'POST':
-        data = request.get_json()
-        wallet = data.get('wallet_address')
-        if wallet:
-            admin.wallet_address = wallet
-            db.session.commit()
-            
-            # AUDIT LOG
-            log_audit_action(session['assoc_admin_id'], 'UPDATE_WALLET', 'AssociationAdmin', admin.id, f"Connected new Web3 Wallet: {wallet[:6]}...{wallet[-4:]}")
-            
-            flash("Wallet address connected successfully!", "success")
-            return {"status": "success"}, 200
-        return {"status": "error"}, 400
-        
-    return render_template("assoc_settings.html")
-
 # ==========================================
 # PROPERTY MANAGEMENT
 # ==========================================
@@ -225,18 +208,26 @@ def manage_properties():
         
     return render_template('assoc_properties.html', admin=admin, properties=properties)
 
-@association.route('/assocdash/properties/<property_id>/approve', methods=['POST'])
-@assoc_login_required
-def approve_property(property_id):
-    property_obj = Property.query.get_or_404(property_id)
-    property_obj.verification_status = 'Verified'
+@association.route('/assocdash/brokers/<broker_id>/approve', methods=['POST'])
+@assoc_login_required 
+def approve_broker(broker_id):
+    broker = Broker.query.get_or_404(broker_id)
+    
+    if broker.verification_code:
+        broker.status = 'Active'
+        flash_msg = f"Profile updates for {broker.full_name} approved. Account is fully Active again."
+    else:
+        # No hash yet. This is a brand new application.
+        broker.status = 'Pending Registration'
+        flash_msg = f"Broker {broker.full_name} approved. They are now ready for on-chain deployment."
+        
     db.session.commit()
     
     # AUDIT LOG
-    log_audit_action(session['assoc_admin_id'], 'APPROVE_PROPERTY', 'Property', property_obj.id, f"Verified property listing: {property_obj.title}")
+    log_audit_action(session['assoc_admin_id'], 'APPROVE_BROKER', 'Broker', broker.id, f"Approved broker application/update: {broker.full_name}")
     
-    flash(f"Property '{property_obj.title}' has been officially verified.", "success")
-    return redirect(url_for('association.manage_properties'))
+    flash(flash_msg, "success")
+    return redirect(url_for('association.brokers'))
 
 @association.route('/assocdash/properties/<property_id>/reject', methods=['POST'])
 @assoc_login_required
@@ -249,6 +240,32 @@ def reject_property(property_id):
     log_audit_action(session['assoc_admin_id'], 'REJECT_PROPERTY', 'Property', property_obj.id, f"Rejected property listing: {property_obj.title}")
     
     flash(f"Property '{property_obj.title}' has been rejected.", "error")
+    return redirect(url_for('association.manage_properties'))
+
+@association.route('/assocdash/properties/<property_id>/approve', methods=['POST'])
+@assoc_login_required
+def approve_property(property_id):
+    admin = AssociationAdmin.query.get(session['assoc_admin_id'])
+    property_obj = Property.query.get_or_404(property_id)
+    
+    # Security check
+    if property_obj.broker.organization_id != admin.organization_id:
+        flash("Unauthorized action.", "error")
+        return redirect(url_for('association.manage_properties'))
+        
+    property_obj.verification_status = 'Verified'
+    db.session.commit()
+    
+    # AUDIT LOG
+    log_audit_action(
+        session['assoc_admin_id'], 
+        'APPROVE_PROPERTY', 
+        'Property', 
+        property_obj.id, 
+        f"Approved property listing: {property_obj.title}"
+    )
+    
+    flash(f"Property '{property_obj.title}' has been approved and is now public.", "success")
     return redirect(url_for('association.manage_properties'))
 
 @association.route('/assocdash/properties/<property_id>/review')
@@ -319,3 +336,72 @@ def reject_review(review_id):
     
     flash("Review rejected and deleted.", "info")
     return redirect(url_for('association.manage_reviews'))
+
+@association.route('/assocdash/settings', methods=['GET', 'POST'])
+@assoc_login_required
+def settings():
+    admin = AssociationAdmin.query.get(session['assoc_admin_id'])
+    
+    if request.method == 'POST':
+        
+        # 1. HANDLE WEB3 WALLET CONNECTION (JSON request)
+        if request.is_json:
+            data = request.get_json()
+            wallet = data.get('wallet_address')
+            if wallet:
+                admin.wallet_address = wallet
+                db.session.commit()
+                
+                log_audit_action(session['assoc_admin_id'], 'UPDATE_WALLET', 'AssociationAdmin', admin.id, f"Connected new Web3 Wallet: {wallet[:6]}...{wallet[-4:]}")
+                
+                flash("Wallet address connected successfully!", "success")
+                return {"status": "success"}, 200
+            return {"status": "error"}, 400
+
+        # 2. HANDLE STANDARD FORM SUBMISSIONS
+        action = request.form.get('action')
+
+        # A. PROFILE UPDATE & RE-VERIFICATION
+        if action == 'update_profile':
+            admin.full_name = request.form.get('full_name')
+            
+            # THE FLIP: Revoke active status until Super Admin re-approves
+            admin.account_status = 'Pending'
+            db.session.commit()
+            
+            log_audit_action(session['assoc_admin_id'], 'UPDATE_PROFILE', 'AssociationAdmin', admin.id, "Admin updated profile identity. Triggered Super Admin re-verification.")
+            
+            flash("Profile updated! Your admin privileges are paused pending Super Admin re-verification.", "info")
+            return redirect(url_for('association.dashboard'))
+
+        # B. SECURE PASSWORD CHANGE
+        elif action == 'update_password':
+            current_password = request.form.get('current_password')
+            new_password = request.form.get('new_password')
+
+            if not check_password_hash(admin.password_hash, current_password):
+                flash("Incorrect current password. Security check failed.", "error")
+            elif len(new_password) < 8:
+                flash("New password must be at least 8 characters long.", "error")
+            else:
+                admin.password_hash = generate_password_hash(new_password)
+                db.session.commit()
+                
+                log_audit_action(session['assoc_admin_id'], 'CHANGE_PASSWORD', 'AssociationAdmin', admin.id, "Admin securely updated their password.")
+                flash("Password updated successfully.", "success")
+                
+            return redirect(url_for('association.settings'))
+
+        # Account deletion
+        elif action == 'delete_account':
+            db.session.delete(admin)
+            db.session.commit()
+            
+            # Log it under a system ID since the admin is gone
+            log_audit_action('system', 'DELETE_ACCOUNT', 'AssociationAdmin', admin.id, f"Admin deleted their own account: {admin.full_name}")
+            
+            session.pop('assoc_admin_id', None)
+            flash("Your association admin account has been permanently deleted.", "info")
+            return redirect(url_for('landing.home'))
+            
+    return render_template("assoc_settings.html", admin=admin)
