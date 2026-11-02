@@ -16,35 +16,92 @@
         color: #6B7280;
         margin-bottom: 1.5rem;
     }
+    .breadcrumb a { color: #0A66C2; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
 
-    .breadcrumb a {
+    /* Property Header Top */
+    .property-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .property-title-group { flex: 1; min-width: 300px; }
+    .property-type-badge {
+        display: inline-block;
+        background: #EFF6FF;
+        color: #1D4ED8;
+        padding: 0.4rem 1rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .property-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: #111827;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.2;
+    }
+    .property-location {
+        font-size: 1.1rem;
+        color: #6B7280;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .property-price-group { text-align: right; }
+    .property-price {
+        font-size: 2.25rem;
+        font-weight: 700;
         color: #0A66C2;
-        text-decoration: none;
+        margin: 0;
     }
 
-    .breadcrumb a:hover {
-        text-decoration: underline;
-    }
-
-    /* Hero Image */
+    /* Image Gallery Grid */
+    .gallery-container { margin-bottom: 3rem; }
     .hero-image-container {
         width: 100%;
         height: 500px;
         border-radius: 12px;
         overflow: hidden;
-        margin-bottom: 2.5rem;
         background-color: #F3F4F6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         border: 1px solid #E5E7EB;
+        position: relative;
+        cursor: pointer;
     }
-
     .hero-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.3s ease;
     }
+    .hero-image-container:hover .hero-image { transform: scale(1.02); }
+    
+    .thumbnail-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        overflow-x: auto;
+        padding-bottom: 10px; /* space for scrollbar */
+    }
+    .thumbnail-box {
+        min-width: 120px;
+        height: 80px;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        opacity: 0.7;
+        transition: all 0.2s ease;
+    }
+    .thumbnail-box:hover { opacity: 1; border-color: #0A66C2; }
+    .thumbnail-box img { width: 100%; height: 100%; object-fit: cover; }
 
     /* Two Column Layout */
     .detail-grid {
@@ -54,192 +111,127 @@
         align-items: start;
     }
 
-    /* Left Column: Property Info */
-    .property-header {
-        margin-bottom: 2rem;
-        border-bottom: 1px solid #E5E7EB;
-        padding-bottom: 1.5rem;
-    }
-
-    .property-type-badge {
-        display: inline-block;
-        background: #EFF6FF;
-        color: #1D4ED8;
-        padding: 0.4rem 1rem;
-        border-radius: 999px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        margin-bottom: 1rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .property-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 2.5rem;
-        color: #111827;
-        margin: 0 0 0.5rem 0;
-        line-height: 1.2;
-    }
-
-    .property-location {
-        font-size: 1.1rem;
-        color: #6B7280;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .property-price {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #0A66C2;
-        margin-top: 1rem;
-    }
-
-    /* Key Features */
-    .features-row {
-        display: flex;
-        gap: 2rem;
-        margin-bottom: 2rem;
+    /* Key Features Grid */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
         background: #F9FAFB;
-        padding: 1.5rem;
-        border-radius: 8px;
+        padding: 2rem;
+        border-radius: 12px;
         border: 1px solid #E5E7EB;
     }
-
     .feature-item {
         display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 1.1rem;
-        color: #374151;
-        font-weight: 500;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
-
-    .feature-item i {
-        color: #9CA3AF;
-        font-size: 1.25rem;
-    }
+    .feature-item i { color: #0A66C2; font-size: 1.5rem; }
+    .feature-value { font-size: 1.25rem; font-weight: 700; color: #111827; }
+    .feature-label { font-size: 0.9rem; color: #6B7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
 
     /* Description */
     .section-title {
         font-size: 1.5rem;
         font-family: 'Playfair Display', serif;
         color: #111827;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #F3F4F6;
     }
-
     .property-description {
-        font-size: 1.05rem;
-        line-height: 1.7;
+        font-size: 1.1rem;
+        line-height: 1.8;
         color: #4B5563;
         white-space: pre-wrap;
-        /* Preserves line breaks from the database */
     }
 
-    /* Right Column: Broker Card (Sticky) */
-    .broker-sidebar {
-        position: sticky;
-        top: 2rem;
-    }
-
-    .broker-card {
+    /* Location Details Grid */
+    .location-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
         background: white;
         border: 1px solid #E5E7EB;
         border-radius: 12px;
         padding: 2rem;
-        text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
+    .loc-data-group { display: flex; flex-direction: column; gap: 0.25rem; }
+    .loc-label { font-size: 0.85rem; color: #6B7280; font-weight: 600; text-transform: uppercase; }
+    .loc-value { font-size: 1.1rem; color: #111827; font-weight: 500; }
 
+    /* Right Column: Broker Card (Sticky) */
+    .broker-sidebar { position: sticky; top: 2rem; }
+    .broker-card {
+        background: white;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
     .broker-avatar {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
         background-color: #EFF6FF;
         color: #0A66C2;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
-        margin: 0 auto 1rem auto;
+        font-size: 2.5rem;
+        margin: 0 auto 1.5rem auto;
+        border: 3px solid #F3F4F6;
+        overflow: hidden;
     }
-
-    .broker-name {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #111827;
-        margin-bottom: 0.25rem;
-    }
-
-    .broker-org {
-        font-size: 0.9rem;
-        color: #6B7280;
-        margin-bottom: 1.5rem;
-    }
+    .broker-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .broker-name { font-size: 1.35rem; font-weight: 700; color: #111827; margin-bottom: 0.25rem; }
+    .broker-org { font-size: 1rem; color: #6B7280; margin-bottom: 2rem; }
 
     .contact-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        width: 100%;
-        padding: 0.85rem;
-        border-radius: 6px;
-        font-weight: 600;
-        text-decoration: none;
-        margin-bottom: 1rem;
-        transition: background 0.2s;
-        box-sizing: border-box;
+        display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        width: 100%; padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1.05rem;
+        text-decoration: none; margin-bottom: 1rem; transition: all 0.2s ease; box-sizing: border-box;
     }
-
-    .btn-call {
-        background-color: #10B981;
-        color: white;
-    }
-
-    .btn-call:hover {
-        background-color: #059669;
-    }
-
-    .btn-profile {
-        background-color: white;
-        color: #0A66C2;
-        border: 1px solid #0A66C2;
-    }
-
-    .btn-profile:hover {
-        background-color: #0A66C2;
-        color: white;
-    }
+    .btn-call { background-color: #10B981; color: white; border: 2px solid #10B981; }
+    .btn-call:hover { background-color: #059669; border-color: #059669; }
+    .btn-profile { background-color: white; color: #0A66C2; border: 2px solid #0A66C2; }
+    .btn-profile:hover { background-color: #F8FAFC; }
 
     .verified-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        color: #059669;
-        font-size: 0.85rem;
-        font-weight: 600;
-        background: #D1FAE5;
-        padding: 0.4rem 0.8rem;
-        border-radius: 4px;
-        margin-top: 1rem;
+        display: inline-flex; align-items: center; gap: 0.5rem; color: #059669;
+        font-size: 0.9rem; font-weight: 600; background: #D1FAE5; padding: 0.5rem 1rem;
+        border-radius: 999px; margin-top: 1.5rem;
     }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.95);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 2000; opacity: 0; visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .lightbox-modal.active { opacity: 1; visibility: visible; }
+    .lightbox-content { max-width: 90%; max-height: 90vh; object-fit: contain; border-radius: 4px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
+    .lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; transition: color 0.2s; z-index: 2001; }
+    .lightbox-close:hover { color: #ccc; }
+    .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 3rem; cursor: pointer; padding: 1rem; user-select: none; transition: transform 0.2s, color 0.2s; z-index: 2001; }
+    .lightbox-nav:hover { color: #ccc; transform: translateY(-50%) scale(1.1); }
+    .lightbox-prev { left: 20px; }
+    .lightbox-next { right: 20px; }
 
     /* Responsive */
     @media (max-width: 900px) {
-        .detail-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .hero-image-container {
-            height: 350px;
-        }
-
-        .broker-sidebar {
-            position: static;
-        }
+        .detail-grid { grid-template-columns: 1fr; }
+        .hero-image-container { height: 350px; }
+        .broker-sidebar { position: static; }
+        .property-price-group { text-align: left; }
+    }
+    @media (max-width: 600px) {
+        .location-grid { grid-template-columns: 1fr; }
     }
 </style>
 
@@ -251,15 +243,50 @@
         <span style="color: #111827; font-weight: 500;">{{ property.title }}</span>
     </div>
 
-    <!-- Main Image -->
-    <div class="hero-image-container">
-        {% if property.images %}
-        <img src="{{ property.images[0].image_url }}" alt="{{ property.title }}" class="hero-image">
-        {% else %}
-        <div style="color: #9CA3AF; text-align: center;">
-            <i class="fa-solid fa-image" style="font-size: 4rem; margin-bottom: 1rem;"></i>
-            <p>No image available</p>
+    <!-- Top Header -->
+    <div class="property-header-top">
+        <div class="property-title-group">
+            <span class="property-type-badge">For {{ property.listing_type }}</span>
+            <h1 class="property-title">{{ property.title }}</h1>
+            <div class="property-location">
+                <i class="fa-solid fa-location-dot"></i>
+                {{ property.sector }}, {{ property.district }}, {{ property.province }}
+            </div>
         </div>
+        <div class="property-price-group">
+            <div class="property-price">{{ "{:,.0f}".format(property.price) }} RWF</div>
+        </div>
+    </div>
+
+    <!-- Image Gallery -->
+    <div class="gallery-container">
+        <!-- Main Hero -->
+        <div class="hero-image-container" id="hero-image-trigger">
+            {% if property.images %}
+                <img src="{{ property.images[0].image_url }}" alt="{{ property.title }}" class="hero-image">
+                <!-- Hidden div to hold gallery class for the main image -->
+                <div style="display:none;" class="gallery-img" data-src="{{ property.images[0].image_url }}"></div>
+            {% else %}
+                <div style="color: #9CA3AF; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
+                    <i class="fa-solid fa-image" style="font-size: 5rem; margin-bottom: 1rem;"></i>
+                    <p style="font-size: 1.2rem;">No images available</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Thumbnails Row -->
+        {% if property.images and property.images|length > 1 %}
+        <div class="thumbnail-row">
+            {% for image in property.images %}
+                <div class="thumbnail-box trigger-lightbox" data-index="{{ loop.index0 }}">
+                    <img src="{{ image.image_url }}" alt="Thumbnail">
+                    <div style="display:none;" class="gallery-img" data-src="{{ image.image_url }}"></div>
+                </div>
+            {% endfor %}
+        </div>
+        {% elif property.images and property.images|length == 1 %}
+             <!-- Fallback if there's only 1 image, we still need it in the DOM list -->
+             <div style="display:none;" class="gallery-img" data-src="{{ property.images[0].image_url }}"></div>
         {% endif %}
     </div>
 
@@ -267,27 +294,30 @@
 
         <!-- Left Column: Details -->
         <div class="property-main">
-            <div class="property-header">
-                <span class="property-type-badge">For {{ property.listing_type }}</span>
-                <h1 class="property-title">{{ property.title }}</h1>
-                <div class="property-location">
-                    <i class="fa-solid fa-location-dot"></i>
-                    {{ property.sector }}, {{ property.district }}, {{ property.province }}
-                </div>
-                <div class="property-price">{{ "{:,.0f}".format(property.price) }} RWF</div>
-            </div>
-
-            <!-- Quick Specs -->
-            <div class="features-row">
+            
+            <!-- Quick Specs Grid -->
+            <div class="features-grid">
+                {% if property.bedrooms is not none %}
                 <div class="feature-item">
                     <i class="fa-solid fa-bed"></i>
-                    <span>{{ property.bedrooms }} Beds</span>
+                    <span class="feature-value">{{ property.bedrooms }}</span>
+                    <span class="feature-label">Bedrooms</span>
                 </div>
+                {% endif %}
+                
+                {% if property.bathrooms is not none %}
                 <div class="feature-item">
                     <i class="fa-solid fa-bath"></i>
-                    <span>{{ property.bathrooms }} Baths</span>
+                    <span class="feature-value">{{ property.bathrooms }}</span>
+                    <span class="feature-label">Bathrooms</span>
                 </div>
-                <!-- You can add square footage here if you have it in your model -->
+                {% endif %}
+                
+                <div class="feature-item">
+                    <i class="fa-solid fa-house-chimney"></i>
+                    <span class="feature-value">{{ property.listing_type }}</span>
+                    <span class="feature-label">Property Type</span>
+                </div>
             </div>
 
             <!-- Full Description -->
@@ -296,42 +326,42 @@
 
             <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 3rem 0;">
 
-            <!-- Exact Location Breakdown -->
+            <!-- Exact Location Grid -->
             <h2 class="section-title">Location Details</h2>
-            <table style="width: 100%; max-width: 400px; text-align: left; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #F3F4F6;">
-                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">Province</th>
-                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.province }}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #F3F4F6;">
-                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">District</th>
-                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.district }}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #F3F4F6;">
-                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">Sector</th>
-                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.sector }}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #F3F4F6;">
-                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">Cell</th>
-                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.cell }}</td>
-                </tr>
-                <tr>
-                    <th style="padding: 0.75rem 0; color: #6B7280; font-weight: 500;">Village</th>
-                    <td style="padding: 0.75rem 0; color: #111827; font-weight: 600;">{{ property.village }}</td>
-                </tr>
-            </table>
+            <div class="location-grid">
+                <div class="loc-data-group">
+                    <span class="loc-label">Province</span>
+                    <span class="loc-value">{{ property.province }}</span>
+                </div>
+                <div class="loc-data-group">
+                    <span class="loc-label">District</span>
+                    <span class="loc-value">{{ property.district }}</span>
+                </div>
+                <div class="loc-data-group">
+                    <span class="loc-label">Sector</span>
+                    <span class="loc-value">{{ property.sector }}</span>
+                </div>
+                <div class="loc-data-group">
+                    <span class="loc-label">Cell</span>
+                    <span class="loc-value">{{ property.cell }}</span>
+                </div>
+                {% if property.village %}
+                <div class="loc-data-group" style="grid-column: 1 / -1;">
+                    <span class="loc-label">Village</span>
+                    <span class="loc-value">{{ property.village }}</span>
+                </div>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Right Column: Broker Sidebar -->
         <div class="broker-sidebar">
             <div class="broker-card">
-                <div class="broker-avatar" style="background-color: transparent; border: none; padding: 0;">
+                <div class="broker-avatar">
                     {% if property.broker.profile_photo_url %}
-                        <img src="{{ property.broker.profile_photo_url }}" alt="{{ property.broker.full_name }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #E5E7EB;">
+                        <img src="{{ property.broker.profile_photo_url }}" alt="{{ property.broker.full_name }}">
                     {% else %}
-                        <div style="width: 80px; height: 80px; border-radius: 50%; background-color: #EFF6FF; color: #0A66C2; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid #E5E7EB;">
-                            <i class="fa-solid fa-user-tie"></i>
-                        </div>
+                        <i class="fa-solid fa-user-tie"></i>
                     {% endif %}
                 </div>
                 <div class="broker-name">{{ property.broker.full_name }}</div>
@@ -354,4 +384,85 @@
 
     </div>
 </div>
+
+<!-- Lightbox Overlay -->
+<div id="lightbox" class="lightbox-modal">
+    <span class="lightbox-close">&times;</span>
+    <span class="lightbox-nav lightbox-prev"><i class="fa-solid fa-chevron-left"></i></span>
+    <img class="lightbox-content" id="lightbox-img">
+    <span class="lightbox-nav lightbox-next"><i class="fa-solid fa-chevron-right"></i></span>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("lightbox");
+        const modalImg = document.getElementById("lightbox-img");
+        const closeBtn = document.querySelector(".lightbox-close");
+        const prevBtn = document.querySelector(".lightbox-prev");
+        const nextBtn = document.querySelector(".lightbox-next");
+        
+        // Extract all image URLs from the hidden data-src attributes
+        const galleryElements = Array.from(document.querySelectorAll(".gallery-img"));
+        // Remove duplicates in case the hero image is also in the thumbnail list
+        const imageUrls = [...new Set(galleryElements.map(el => el.getAttribute("data-src")))];
+        
+        let currentIndex = 0;
+
+        if (imageUrls.length === 0) return;
+
+        function openLightbox(index) {
+            currentIndex = index;
+            updateLightboxImage();
+            modal.classList.add("active");
+        }
+
+        // Bind click on Hero Image
+        const heroTrigger = document.getElementById("hero-image-trigger");
+        if (heroTrigger && imageUrls.length > 0) {
+            heroTrigger.addEventListener("click", () => openLightbox(0));
+        }
+
+        // Bind clicks on Thumbnails
+        const thumbnailTriggers = document.querySelectorAll(".trigger-lightbox");
+        thumbnailTriggers.forEach(thumb => {
+            thumb.addEventListener("click", function() {
+                const index = parseInt(this.getAttribute("data-index"));
+                openLightbox(index);
+            });
+        });
+
+        // Close Lightbox
+        closeBtn.addEventListener("click", () => modal.classList.remove("active"));
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) modal.classList.remove("active");
+        });
+
+        // Navigation functions
+        function updateLightboxImage() {
+            modalImg.src = imageUrls[currentIndex];
+        }
+
+        function showNext() {
+            currentIndex = (currentIndex + 1) % imageUrls.length;
+            updateLightboxImage();
+        }
+
+        function showPrev() {
+            currentIndex = (currentIndex - 1 + imageUrls.length) % imageUrls.length;
+            updateLightboxImage();
+        }
+
+        nextBtn.addEventListener("click", showNext);
+        prevBtn.addEventListener("click", showPrev);
+
+        // Keyboard Support
+        document.addEventListener("keydown", (e) => {
+            if (!modal.classList.contains("active")) return;
+            
+            if (e.key === "Escape") modal.classList.remove("active");
+            if (e.key === "ArrowRight") showNext();
+            if (e.key === "ArrowLeft") showPrev();
+        });
+    });
+</script>
 {% endblock %}

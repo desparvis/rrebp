@@ -95,6 +95,9 @@
     .btn-edit:hover { background-color: #004182; }
     .btn-delete { background-color: #DC2626; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; }
     .btn-delete:hover { background-color: #B91C1C; }
+    
+    .property-title-link { display: block; font-size: 1.05rem; color: #0A66C2; text-decoration: none; font-weight: 600; transition: color 0.2s; }
+    .property-title-link:hover { color: #004182; text-decoration: underline; }
 
     @media (max-width: 768px) {
         .filter-group { flex: unset; width: calc(50% - 0.5rem); min-width: 0; }
@@ -172,7 +175,8 @@
                         {% endif %}
                     </td>
                     <td>
-                        <strong style="display: block; font-size: 1rem; color: #111827;">{{ property.title }}</strong>
+                        <!-- HERE IS THE UPDATE: Clickable Title Link -->
+                        <a href="{{ url_for('broker.view_property', property_id=property.id) }}" class="property-title-link">{{ property.title }}</a>
                         <span style="font-size: 0.85rem; color: #6B7280;">
                             {% if property.village %}{{ property.village }}, {% endif %}
                             {{ property.cell }}, {{ property.sector }} &bull; {{ property.listing_type }}

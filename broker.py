@@ -344,3 +344,16 @@ def settings():
             return redirect(url_for('landing.home'))
 
     return render_template("broker_settings.html", broker=broker)
+
+@broker_bp.route('/my-properties/<property_id>/view')
+@broker_login_required
+def view_property(property_id):
+    broker = Broker.query.get(session['broker_id'])
+    property_obj = Property.query.get_or_404(property_id)
+    
+    # Security check: ensure brokers can only view their own properties through this portal route
+    if property_obj.broker_id != broker.id:
+        flash("Unauthorized access to this property.", "error")
+        return redirect(url_for('broker.my_properties'))
+        
+    return render_template('broker_view_property.html', broker=broker, property=property_obj)

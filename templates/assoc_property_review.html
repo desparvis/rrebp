@@ -8,7 +8,7 @@
     
     /* Image Grid */
     .image-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .image-wrapper { border-radius: 6px; overflow: hidden; border: 1px solid #E5E7EB; aspect-ratio: 4/3; }
+    .image-wrapper { border-radius: 6px; overflow: hidden; border: 1px solid #E5E7EB; aspect-ratio: 4/3; cursor: pointer; }
     .image-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
     .image-wrapper img:hover { transform: scale(1.05); }
 
@@ -32,9 +32,32 @@
     .badge.verified { background-color: #D1FAE5; color: #065F46; }
     .badge.rejected { background-color: #FEE2E2; color: #991B1B; }
 
+    /* Lightbox Modal */
+    .lightbox-modal {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 2000;
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .lightbox-modal.active { opacity: 1; visibility: visible; }
+    .lightbox-content { max-width: 90%; max-height: 90vh; object-fit: contain; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    
+    .lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; transition: color 0.2s; z-index: 2001; }
+    .lightbox-close:hover { color: #ccc; }
+    
+    .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 3rem; cursor: pointer; padding: 1rem; user-select: none; transition: transform 0.2s, color 0.2s; z-index: 2001; }
+    .lightbox-nav:hover { color: #ccc; transform: translateY(-50%) scale(1.1); }
+    .lightbox-prev { left: 20px; }
+    .lightbox-next { right: 20px; }
+
     @media (max-width: 768px) {
         .details-grid { grid-template-columns: 1fr; gap: 1rem; }
         .action-bar { flex-direction: column; }
+        .lightbox-nav { font-size: 2rem; padding: 0.5rem; }
+        .lightbox-prev { left: 10px; }
+        .lightbox-next { right: 10px; }
     }
 </style>
 
@@ -54,10 +77,8 @@
     <h3 style="font-size: 1.1rem; color: #374151; margin-bottom: 1rem;">Property Photos</h3>
     <div class="image-gallery">
         {% for image in property.images %}
-            <div class="image-wrapper">
-                <a href="{{ image.image_url }}" target="_blank" title="Click to view full size">
-                    <img src="{{ image.image_url }}" alt="Property Image">
-                </a>
+            <div class="image-wrapper gallery-item">
+                <img src="{{ image.image_url }}" alt="Property Image" class="gallery-img">
             </div>
         {% else %}
             <p style="color: #6B7280; font-size: 0.9rem; grid-column: 1 / -1; padding: 2rem; background: #F9FAFB; text-align: center; border-radius: 6px;">No photos uploaded.</p>
@@ -132,4 +153,70 @@
     {% endif %}
 
 </div>
+
+<!-- Lightbox Overlay -->
+<div id="lightbox" class="lightbox-modal">
+    <span class="lightbox-close">&times;</span>
+    <span class="lightbox-nav lightbox-prev"><i class="fa-solid fa-chevron-left"></i></span>
+    <img class="lightbox-content" id="lightbox-img">
+    <span class="lightbox-nav lightbox-next"><i class="fa-solid fa-chevron-right"></i></span>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("lightbox");
+        const modalImg = document.getElementById("lightbox-img");
+        const closeBtn = document.querySelector(".lightbox-close");
+        const prevBtn = document.querySelector(".lightbox-prev");
+        const nextBtn = document.querySelector(".lightbox-next");
+        
+        const galleryImages = Array.from(document.querySelectorAll(".gallery-img"));
+        const imageUrls = galleryImages.map(img => img.src);
+        let currentIndex = 0;
+
+        if (galleryImages.length === 0) return;
+
+        // Open Lightbox
+        galleryImages.forEach((img, index) => {
+            img.parentElement.addEventListener("click", () => {
+                currentIndex = index;
+                updateLightboxImage();
+                modal.classList.add("active");
+            });
+        });
+
+        // Close Lightbox
+        closeBtn.addEventListener("click", () => modal.classList.remove("active"));
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) modal.classList.remove("active");
+        });
+
+        // Navigation
+        function updateLightboxImage() {
+            modalImg.src = imageUrls[currentIndex];
+        }
+
+        function showNext() {
+            currentIndex = (currentIndex + 1) % imageUrls.length;
+            updateLightboxImage();
+        }
+
+        function showPrev() {
+            currentIndex = (currentIndex - 1 + imageUrls.length) % imageUrls.length;
+            updateLightboxImage();
+        }
+
+        nextBtn.addEventListener("click", showNext);
+        prevBtn.addEventListener("click", showPrev);
+
+        // Keyboard Support
+        document.addEventListener("keydown", (e) => {
+            if (!modal.classList.contains("active")) return;
+            
+            if (e.key === "Escape") modal.classList.remove("active");
+            if (e.key === "ArrowRight") showNext();
+            if (e.key === "ArrowLeft") showPrev();
+        });
+    });
+</script>
 {% endblock %}

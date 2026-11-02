@@ -1,0 +1,211 @@
+{% extends "broker_base.html" %}
+
+{% block title %}{{ property.title }} | Broker Portal{% endblock %}
+
+{% block content %}
+<style>
+    .review-card { background: white; border: 1px solid var(--border-grey); border-radius: 8px; padding: 2rem; margin-top: 1.5rem; }
+    
+    /* Image Grid */
+    .image-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .image-wrapper { border-radius: 6px; overflow: hidden; border: 1px solid #E5E7EB; aspect-ratio: 4/3; cursor: pointer; }
+    .image-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .image-wrapper img:hover { transform: scale(1.05); }
+
+    /* Property Details */
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; background-color: #F9FAFB; padding: 1.5rem; border-radius: 8px; border: 1px solid #E5E7EB; }
+    .detail-group { margin-bottom: 1rem; }
+    .detail-label { display: block; font-size: 0.85rem; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .detail-value { font-size: 1.05rem; color: #111827; font-weight: 500; }
+    
+    .description-box { margin-bottom: 2rem; line-height: 1.6; color: #374151; font-size: 1rem; padding-top: 1.5rem; border-top: 1px solid #E5E7EB; }
+
+    /* Action Bar */
+    .action-bar { display: flex; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid #E5E7EB; }
+    .btn-edit-large { background-color: #0A66C2; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s; }
+    .btn-edit-large:hover { background-color: #084d96; }
+    
+    .badge { padding: 0.35rem 1rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; display: inline-block; }
+    .badge.pending { background-color: #FEF3C7; color: #92400E; }
+    .badge.verified { background-color: #D1FAE5; color: #065F46; }
+    .badge.rejected { background-color: #FEE2E2; color: #991B1B; }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 2000;
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .lightbox-modal.active { opacity: 1; visibility: visible; }
+    .lightbox-content { max-width: 90%; max-height: 90vh; object-fit: contain; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    
+    .lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; transition: color 0.2s; z-index: 2001; }
+    .lightbox-close:hover { color: #ccc; }
+    
+    .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 3rem; cursor: pointer; padding: 1rem; user-select: none; transition: transform 0.2s, color 0.2s; z-index: 2001; }
+    .lightbox-nav:hover { color: #ccc; transform: translateY(-50%) scale(1.1); }
+    .lightbox-prev { left: 20px; }
+    .lightbox-next { right: 20px; }
+
+    @media (max-width: 768px) {
+        .details-grid { grid-template-columns: 1fr; gap: 1rem; }
+        .lightbox-nav { font-size: 2rem; padding: 0.5rem; }
+        .lightbox-prev { left: 10px; }
+        .lightbox-next { right: 10px; }
+    }
+</style>
+
+<div class="admin-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <a href="{{ url_for('broker.my_properties') }}" style="color: #6B7280; text-decoration: none; font-size: 0.9rem; display: inline-block; margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-arrow-left"></i> Back to My Listings
+        </a>
+        <h1 style="margin: 0; font-size: 1.75rem;">{{ property.title }}</h1>
+        <p style="color: var(--text-muted); margin-top: 0.25rem;">Added on {{ property.created_at.strftime('%B %d, %Y') }}</p>
+    </div>
+    
+    <span class="badge {{ property.verification_status|lower }}">{{ property.verification_status }}</span>
+</div>
+
+<div class="review-card">
+    
+    <!-- Photos -->
+    <h3 style="font-size: 1.1rem; color: #374151; margin-bottom: 1rem;">Property Photos</h3>
+    <div class="image-gallery">
+        {% for image in property.images %}
+            <div class="image-wrapper gallery-item">
+                <img src="{{ image.image_url }}" alt="Property Image" class="gallery-img">
+            </div>
+        {% else %}
+            <p style="color: #6B7280; font-size: 0.9rem; grid-column: 1 / -1; padding: 2rem; background: #F9FAFB; text-align: center; border-radius: 6px;">No photos uploaded for this property.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Data Grid -->
+    <div class="details-grid">
+        <div>
+            <div class="detail-group">
+                <span class="detail-label">Listing Type</span>
+                <span class="detail-value">{{ property.listing_type }}</span>
+            </div>
+            <div class="detail-group">
+                <span class="detail-label">Price</span>
+                <span class="detail-value" style="font-family: monospace; font-size: 1.15rem; color: #059669;">{{ "{:,.0f}".format(property.price) }} RWF</span>
+            </div>
+            
+            <div class="detail-group" style="display: flex; gap: 1.5rem; margin-top: 1rem;">
+                {% if property.bedrooms is not none %}
+                <div>
+                    <span class="detail-label">Bedrooms</span>
+                    <span class="detail-value"><i class="fa-solid fa-bed" style="color: #6B7280;"></i> {{ property.bedrooms }}</span>
+                </div>
+                {% endif %}
+                
+                {% if property.bathrooms is not none %}
+                <div>
+                    <span class="detail-label">Bathrooms</span>
+                    <span class="detail-value"><i class="fa-solid fa-bath" style="color: #6B7280;"></i> {{ property.bathrooms }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <div class="detail-group">
+                <span class="detail-label">Geographic Location</span>
+                <span class="detail-value">
+                    {{ property.province }}, {{ property.district }},<br>
+                    {{ property.sector }}, {{ property.cell }}
+                    {% if property.village %}, {{ property.village }}{% endif %}
+                </span>
+            </div>
+            <div class="detail-group">
+                <span class="detail-label">Land UPI Number</span>
+                <span class="detail-value" style="font-family: monospace; font-size: 1.15rem; color: #0A66C2;">{{ property.upi_number or 'Not Provided' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="description-box">
+        <span class="detail-label">Property Description</span>
+        {{ property.description }}
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <a href="{{ url_for('broker.edit_property', property_id=property.id) }}" class="btn-edit-large">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Listing
+        </a>
+    </div>
+
+</div>
+
+<!-- Lightbox Overlay -->
+<div id="lightbox" class="lightbox-modal">
+    <span class="lightbox-close">&times;</span>
+    <span class="lightbox-nav lightbox-prev"><i class="fa-solid fa-chevron-left"></i></span>
+    <img class="lightbox-content" id="lightbox-img">
+    <span class="lightbox-nav lightbox-next"><i class="fa-solid fa-chevron-right"></i></span>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("lightbox");
+        const modalImg = document.getElementById("lightbox-img");
+        const closeBtn = document.querySelector(".lightbox-close");
+        const prevBtn = document.querySelector(".lightbox-prev");
+        const nextBtn = document.querySelector(".lightbox-next");
+        
+        const galleryImages = Array.from(document.querySelectorAll(".gallery-img"));
+        const imageUrls = galleryImages.map(img => img.src);
+        let currentIndex = 0;
+
+        if (galleryImages.length === 0) return;
+
+        // Open Lightbox
+        galleryImages.forEach((img, index) => {
+            img.parentElement.addEventListener("click", () => {
+                currentIndex = index;
+                updateLightboxImage();
+                modal.classList.add("active");
+            });
+        });
+
+        // Close Lightbox
+        closeBtn.addEventListener("click", () => modal.classList.remove("active"));
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) modal.classList.remove("active");
+        });
+
+        // Navigation
+        function updateLightboxImage() {
+            modalImg.src = imageUrls[currentIndex];
+        }
+
+        function showNext() {
+            currentIndex = (currentIndex + 1) % imageUrls.length;
+            updateLightboxImage();
+        }
+
+        function showPrev() {
+            currentIndex = (currentIndex - 1 + imageUrls.length) % imageUrls.length;
+            updateLightboxImage();
+        }
+
+        nextBtn.addEventListener("click", showNext);
+        prevBtn.addEventListener("click", showPrev);
+
+        // Keyboard Support
+        document.addEventListener("keydown", (e) => {
+            if (!modal.classList.contains("active")) return;
+            
+            if (e.key === "Escape") modal.classList.remove("active");
+            if (e.key === "ArrowRight") showNext();
+            if (e.key === "ArrowLeft") showPrev();
+        });
+    });
+</script>
+{% endblock %}
