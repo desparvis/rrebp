@@ -1,6 +1,6 @@
 # Rwanda Real Estate Brokers Platform (RREBP)
 
-Final Version Demo Video Link: [demolink](https://github.com/desparvis/rrebp)](https://drive.google.com/file/d/1hcDYk8K8tX_evZ4sHzldoox9A4PAXTq_/view?usp=drive_link) <br>
+Final Version Demo Video Link: [demolink](https://drive.google.com/file/d/1hcDYk8K8tX_evZ4sHzldoox9A4PAXTq_/view?usp=drive_link) <br>
 Github Link: [githublink](https://github.com/desparvis/rrebp) <br>
 Report Link: [reportlink](https://docs.google.com/document/d/1qpRgYgkxTaSbkCGwUvimn-oGjk2fBLov7tSdNG1WFLU/edit?tab=t.0) <br>
 
