@@ -1,8 +1,8 @@
 # Rwanda Real Estate Brokers Platform (RREBP)
 
 Final Version Demo Video Link: [demolink](https://github.com/desparvis/rrebp)](https://drive.google.com/file/d/1hcDYk8K8tX_evZ4sHzldoox9A4PAXTq_/view?usp=drive_link) <br>
-Github Link: [githublink](https://github.com/desparvis/rrebp)
-Report Link: [reportlink](https://docs.google.com/document/d/1qpRgYgkxTaSbkCGwUvimn-oGjk2fBLov7tSdNG1WFLU/edit?tab=t.0)
+Github Link: [githublink](https://github.com/desparvis/rrebp) <br>
+Report Link: [reportlink](https://docs.google.com/document/d/1qpRgYgkxTaSbkCGwUvimn-oGjk2fBLov7tSdNG1WFLU/edit?tab=t.0) <br>
 
 ## Description
 
@@ -23,29 +23,81 @@ The platform also features Web3 capabilities, allowing verified brokers to be re
 
 ## Repository Structure
 
+## Repository Structure
+
 ```text
 rrebp/
-├── app.py                   # Main Flask application and server entry point
-├── models.py                # SQLAlchemy database schema and models (Broker, Property, etc.)
-├── seed.py / seed_admin.py  # Database initialization and secure Super Admin injection scripts
-├── vercel.json              # Vercel serverless deployment configuration
-├── requirements.txt         # Python dependencies and libraries
-├── .env.example             # Template for required environment variables
-├── routes/                  # Flask Blueprints for modular routing
-│   ├── landing.py           # Public-facing properties, verification, and authentication
-│   ├── association.py       # Association Admin dashboard and review logic
-│   └── broker.py            # Broker dashboard, property listing, and settings
-├── templates/               # Jinja2 HTML templates
-│   ├── base.html            # Public layout wrapper
-│   ├── assoc_base.html      # Association Admin layout wrapper
-│   ├── broker_base.html     # Broker portal layout wrapper
-│   └── ...                  # Individual view templates
-├── static/                  # Static assets
-│   ├── css/                 # Custom stylesheets
-│   └── data/                # JSON datasets (e.g., locations.json for Rwanda provinces)
-└── contracts/               # Web3 Smart Contract source files
-    └── RREBP_BrokerRegistry.sol
+├── README.md
+├── app.py                       # Main Flask application and server entry point
+├── models.py                    # SQLAlchemy database models and schema
+├── seed.py                      # Database initialization and seeding script
+├── requirements.txt             # Python dependencies and libraries
+├── vercel.json                  # Vercel deployment configuration
+│
+├── association.py               # Association Admin routes and management logic
+├── broker.py                    # Broker dashboard, property and account management
+├── landing.py                   # Public landing page, authentication and verification
+├── superadmin.py                # Super Admin dashboard and management functionality
+│
+├── static/                      # Static application assets
+│   ├── css/                     # Stylesheets
+│   │   ├── admin_style.css
+│   │   ├── auth_portal.css
+│   │   ├── sp_login.css
+│   │   └── style.css
+│   │
+│   ├── data/                    # JSON datasets
+│   │   └── locations.json       # Rwanda geographical locations dataset
+│   │
+│   ├── img/                     # Application images and visual assets
+│   └── js/                      # JavaScript files
+│
+└── templates/                   # Jinja2 HTML templates
+    ├── 404.html                 # Page not found error page
+    ├── 500.html                 # Internal server error page
+    ├── base.html                # Public-facing base layout
+    ├── index.html               # Main landing page
+    ├── auth_portal.html         # Authentication interface
+    ├── register_admin.html      # Admin registration page
+    │
+    ├── assoc_base.html          # Association Admin base layout
+    ├── assoc_dashboard.html     # Association Admin dashboard
+    ├── assoc_brokers.html       # Association broker management
+    ├── assoc_broker_form.html   # Broker registration form
+    ├── assoc_broker_review.html # Broker review interface
+    ├── assoc_properties.html    # Association property management
+    ├── assoc_property_review.html # Property review interface
+    ├── assoc_reviews.html       # Association reviews
+    ├── assoc_settings.html      # Association settings
+    │
+    ├── broker_base.html         # Broker portal base layout
+    ├── broker_dashboard.html    # Broker dashboard
+    ├── broker_add_property.html # Add property listing
+    ├── broker_edit_property.html # Edit property listing
+    ├── broker_properties.html   # Broker property listings
+    ├── broker_reviews.html      # Broker reviews
+    ├── broker_settings.html     # Broker account settings
+    ├── broker_view_property.html # Individual property view
+    │
+    ├── sp_base.html             # Super Admin base layout
+    ├── sp_dashboard.html        # Super Admin dashboard
+    ├── sp_login.html            # Super Admin login
+    ├── sp_admins.html           # Admin management
+    ├── sp_admin_create.html     # Create administrator
+    ├── sp_audit_logs.html       # System audit logs
+    ├── sp_org_form.html         # Organization registration form
+    ├── sp_organizations.html    # Organization management
+    │
+    ├── public_properties.html   # Public property listings
+    ├── public_property_detail.html # Public property details
+    ├── public_broker_profile.html # Public broker profiles
+    ├── public_broker_rankings.html # Public broker rankings
+    ├── public_leave_review.html # Public review submission
+    ├── public_forgot_password.html # Password recovery
+    ├── public_reset_password.html # Password reset
+    └── verify.html              # Public blockchain broker verification
 ```
+
 
 ## Smart Contract Snippets
 
@@ -160,7 +212,7 @@ Create a `.env` file in the root directory and configure the required environmen
 ```env
 SECRET_KEY=your_secure_random_key
 
-SUPERADMIN_EMAIL=credo@rrebp.rw
+SUPERADMIN_EMAIL=example@email.com
 SUPERADMIN_PASSWORD=your_secure_password
 
 DATABASE_URL=postgresql+psycopg2://[user]:[URL-encoded-password]@[supabase-pooler-url]:6543/postgres
