@@ -1,19 +1,59 @@
-# Rwanda Real Estate Brokers Platform(RREBP)
+# Rwanda Real Estate Brokers Platform (RREBP)
 
-Github Repository: [link](https://github.com/desparvis/rrebp) <br>
-MVP Demo Video: [youtubelink](https://youtu.be/1rWhGEpu08I?si=vz7Anm2vfKNwKzqC) <br>
-Link to App Screenshots: [screenshots](https://docs.google.com/document/d/1DnhF0Yj8vkNePUTNB6AGSmyD0gIeQpu9TW0RJPdaSgQ/edit?tab=t.0)
+Final Version Demo Video Link: [demolink](https://github.com/desparvis/rrebp)](https://drive.google.com/file/d/1hcDYk8K8tX_evZ4sHzldoox9A4PAXTq_/view?usp=drive_link) <br>
+Github Link: [githublink](https://github.com/desparvis/rrebp)
+Report Link: [reportlink](https://docs.google.com/document/d/1qpRgYgkxTaSbkCGwUvimn-oGjk2fBLov7tSdNG1WFLU/edit?tab=t.0)
 
 ## Description
 
-Rwanda Real Estate Brokers Platform is a web2 and web3 application designed to improve transparency in the Rwandan real estate sector. It has normal web2 features such as authentication, creation, editing, deleting features. These features allow users to register real estate associations, approve the associations, and register brokers locally. This platform also has web3 capabilities as brokers can be recorded on the blockchain to maintain on-chain registry for brokers.
+Rwanda Real Estate Brokers Platform is a Web2 and Web3 application designed to improve transparency in the Rwandan real estate sector. It features standard Web2 capabilities such as authentication, content creation, editing, and deletion. These features allow users to register real estate associations, approve these associations, and locally register brokers alongside their property listings.
+
+The platform also features Web3 capabilities, allowing verified brokers to be recorded on the blockchain to maintain an immutable, publicly verifiable on-chain registry.
+
+## Technical Requirements
+
+- **Runtime Environment:** Python 3.12.3+
+- **Backend Framework:** Flask, Flask-SQLAlchemy (ORM)
+- **Database:** PostgreSQL (hosted via Supabase with Session Pooling on port 6543)
+- **Database Driver:** psycopg2-binary
+- **Cloud Storage:** Cloudinary (for property image uploads)
+- **Web3 Integration:** MetaMask Browser Extension, Ethers.js
+- **Smart Contracts:** Solidity (^0.8.x), Ethereum Sepolia Testnet
+- **Deployment Hosting:** Vercel (Serverless Python Runtime)
+
+## Repository Structure
+
+```text
+rrebp/
+├── app.py                   # Main Flask application and server entry point
+├── models.py                # SQLAlchemy database schema and models (Broker, Property, etc.)
+├── seed.py / seed_admin.py  # Database initialization and secure Super Admin injection scripts
+├── vercel.json              # Vercel serverless deployment configuration
+├── requirements.txt         # Python dependencies and libraries
+├── .env.example             # Template for required environment variables
+├── routes/                  # Flask Blueprints for modular routing
+│   ├── landing.py           # Public-facing properties, verification, and authentication
+│   ├── association.py       # Association Admin dashboard and review logic
+│   └── broker.py            # Broker dashboard, property listing, and settings
+├── templates/               # Jinja2 HTML templates
+│   ├── base.html            # Public layout wrapper
+│   ├── assoc_base.html      # Association Admin layout wrapper
+│   ├── broker_base.html     # Broker portal layout wrapper
+│   └── ...                  # Individual view templates
+├── static/                  # Static assets
+│   ├── css/                 # Custom stylesheets
+│   └── data/                # JSON datasets (e.g., locations.json for Rwanda provinces)
+└── contracts/               # Web3 Smart Contract source files
+    └── RREBP_BrokerRegistry.sol
+```
 
 ## Smart Contract Snippets
 
-RREBP uses a Solidity Smart Contract, the RREBP_BrokerRegistry.sol to maintain on-chain registry of brokers. The contract uses a hash that uses the broker's information, the address that stores the crypto wallet of the real estate association, a boolean for showing if the broker is active, and the registration timestamp.
+RREBP uses a Solidity smart contract, `RREBP_BrokerRegistry.sol`, to maintain an on-chain registry of brokers. The contract utilizes a hash generated from the broker's information, the crypto wallet address of the real estate association, a boolean indicating whether the broker is active, and a registration timestamp.
 
 Here is a snippet:
-```
+
+```solidity
 struct Broker {
     bytes32 brokerHash;
     address associationWallet;
@@ -21,107 +61,143 @@ struct Broker {
     uint256 registeredAt;
 }
 
-mapping(bytes32 => Broker) public brokers;<br>
+mapping(bytes32 => Broker) public brokers;
 mapping(address => bool) public authorizedAssociations;
 ```
 
-## Data visualization
+## Data Visualization
 
-Data in the RREBP platform is visualized using admin dashboards and a public verification page.<br>
-- On the superadmin dashboard, data about active organizations, registered admins, suspended entinties can also be shown through numbers.<br>
-- On the assocation admins dashboard, data about total brokers and those that verified on chain can be showed through numbers.<br>
-- On the verification page, the broker registration is checked against the smart contract
+Data in the RREBP platform is visualized using role-specific administrative dashboards and a public verification page.
 
-## Security measures
+- **Super Admin Dashboard:** Displays metrics on active organizations, registered admins, and suspended entities.
+- **Association Admin Dashboard:** Displays aggregated data on total brokers and those currently verified on-chain.
+- **Public Verification Page:** Allows end-users to check a broker's registration hash directly against the deployed smart contract.
 
-The RREBP platform combines both off-chain security and blockchain verification.<br>
-- Password hashing: Passwords are hashed before being stored on the database using ***Werkzeug*** security tools.<br>
-- Role-Based Access: Separate permissions are given to different admins, the super admin has most control while the association admin controls the brokers.<br>
-- Data Privacy: Broker identification information is kept off-chain while cryptographic hashes are used for blockchain verification.<br>
-- Wallet Authorization: Only approved association wallets can perform authorized blockchain operations.
-- Duplicate Prevention: The smart contract rejects duplicate broker registrations.
+## Security Measures
+
+The RREBP platform combines robust off-chain security with blockchain immutability.
+
+- **Password Hashing:** Passwords are mathematically hashed before being stored in the database using the Werkzeug security library.
+- **Role-Based Access Control (RBAC):** Strict view and action permissions are separated between Super Admins, Association Admins, and Brokers using Python decorators.
+- **Data Privacy:** Personally Identifiable Information (PII) is kept securely off-chain in the PostgreSQL database, while cryptographic hashes are utilized for blockchain verification.
+- **Wallet Authorization:** Only pre-approved association wallets can perform authorized write operations to the blockchain.
+- **Duplicate Prevention:** The smart contract logic explicitly rejects duplicate broker registrations.
 
 ## Schematic Design and Component Interaction
-```
+
+```text
     Super Admin / Association Admin
-              |
-       Frontend Interface
-      (HTML, CSS, JavaScript)
-              |
-        ______|______
-       |             |
-       |             |
- Flask Backend    MetaMask
-       |             |
-       |             |
- SQLite Database  Ethers.js
-                     |
-              Ethereum Smart
-                  Contract
-                     |
-              Broker Verification
-                     |
-               Public Users
-```
-### Main components
-
-- Frontend(HTML, CSS, JavaScript): Provides the landing, administrative, and pubic verification interfaces. <br>
-- Backend(Flask): Provides the logic for authentication, organization and association management, and broker records management.<br>
-- Database(SQLite): Provides storage for off-chain data.<br>
-- MetaMask and Ethers.js: Allows smart contract and wallet interaction.<br>
-- Smart contract(RREBP_BrokerRegistry): Provides a blockchain verification registry.<br>
-
-### Diagram description
-
-Here we can see that the Super Admin and the Association Admin use the frontend interface which is built using JavaScript, HTML, and CSS. It talks to a Flask backend which stores the data on a SQLite Database. In addition, when interacting with the interface, actions that trigger metamask to perform a transaction. That is because of the ethers.js library helps interact with the deployed smart contract. End users can then use the public verification to interface to verify a broker's status and information.
-
-## How to setup the environment
-
-
-### Clone the repository
-```
-git clone [Your-Repo-URL]
+                |
+         Frontend Interface
+        (HTML, CSS, JavaScript)
+                |
+          ______|______
+         |             |
+         |             |
+    Flask Backend   MetaMask
+         |             |
+         |             |
+  Supabase Database  Ethers.js
+    (PostgreSQL)       |
+         |             |
+Posting Properties Ethereum Smart
+         |           Contract
+Rating properties      |
+                       |
+                Broker Verification
+                       |
+                  Public Users
 ```
 
-```
+### Main Components
+
+- **Frontend (HTML, CSS, JavaScript):** Provides the landing, administrative, and public verification interfaces.
+- **Backend (Flask):** Serves the application logic, handles authentication, organization/association management, and brokers' property media routing.
+- **Database (Supabase PostgreSQL):** Provides scalable cloud storage for off-chain relational data, including users, properties, and reviews.
+- **Cloud Storage (Cloudinary):** Handles direct uploads and global CDN delivery for property gallery images.
+- **MetaMask and Ethers.js:** Facilitates secure smart contract and wallet interactions from the browser.
+- **Smart Contract (RREBP_BrokerRegistry):** Acts as the decentralized, tamper-proof verification registry.
+
+### Diagram Description
+
+The Super Admin and Association Admin interact with the frontend interface, built using HTML, CSS, and JavaScript. The frontend communicates with the Flask backend, which handles application logic and reads and writes data to the cloud-hosted Supabase PostgreSQL database.
+
+Specific administrative actions trigger MetaMask through the Ethers.js library to execute transactions on the deployed Ethereum smart contract. End users can then utilize the public verification interface to cryptographically verify a broker's registration status on-chain.
+
+## How to Setup the Environment
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/desparvis/rrebp.git
 cd rrebp
 ```
 
-### Create and activate a virtual environment
-```
-python -m venv venv
+### 2. Create and Activate a Virtual Environment
+
+```bash
+python -m venv .venv
 ```
 
-```
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+```bash
+# On Linux/macOS
+source .venv/bin/activate
+
+# On Windows
+.venv\Scripts\activate
 ```
 
-### Install all backend dependencies
-```
-pip install Flask Flask-SQLAlchemy python-dotenv Werkzeug
+### 3. Install Backend Dependencies
+
+```bash
+pip install -r requirements.txt
 ```
 
-Create your environment variables
-Create a .env file in the root directory and add:
+### 4. Create Your Environment Variables
+
+Create a `.env` file in the root directory and configure the required environment variables:
+
+```env
 SECRET_KEY=your_secure_random_key
 
-### Initialize and seed the local SQLite database
+SUPERADMIN_EMAIL=credo@rrebp.rw
+SUPERADMIN_PASSWORD=your_secure_password
+
+DATABASE_URL=postgresql+psycopg2://[user]:[URL-encoded-password]@[supabase-pooler-url]:6543/postgres
+
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
-python seed.py
+
+**Note:** Replace the placeholder values with your actual credentials. Never commit your `.env` file or expose your secret keys in the repository.
+
+### 5. Initialize the Database and Seed Admin
+
+Run the following command to create the PostgreSQL tables in Supabase and inject the Super Admin account:
+
+```bash
+python seed_admin.py
 ```
-### Run the Flask application
-```
+
+### 6. Run the Flask Application
+
+```bash
 python app.py
 ```
 
-## Deployment Plans
-For the final project deployment, the application architecture will transition from a local development environment to a scalable, cloud-based infrastructure:
+The Flask application should now be running in your local development environment.
 
-**Web Application Hosting (Vercel):** The Flask backend and frontend templates will be deployed serverless via Vercel. Vercel provides seamless continuous integration from GitHub, fast global delivery, and out-of-the-box HTTPS for secure web traffic.
+## Deployment Architecture
 
-**Database Migration (Supabase):** The database will shift from local SQLite3 to Supabase (a managed PostgreSQL database). While SQLite3 is a file-based system excellent for local prototyping, Supabase provides the robust scalability, enterprise-grade concurrency, and cloud accessibility required for a production-level real estate registry.
+The application architecture has successfully transitioned from a local development environment to a scalable, cloud-based infrastructure.
 
-**Smart Contract Deployment (Ethereum Sepolia Testnet):** The RREBP_BrokerRegistry smart contract will be deployed to the Sepolia testnet. Sepolia perfectly mirrors the Ethereum Mainnet environment, allowing full interaction with MetaMask and Ethers.js, but utilizes "test-ETH." This ensures a fully functional, zero-cost environment for demonstration and testing without incurring real financial gas fees.
+**Web Application Hosting (Vercel):** The Flask backend and frontend templates are deployed serverless via Vercel using the `vercel.json` configuration. Vercel provides continuous integration from GitHub, fast global delivery, and out-of-the-box HTTPS for secure web traffic.
+
+**Database Migration (Supabase):** The database relies on Supabase, a managed PostgreSQL database. Connected via an IPv4 Session Pooler (port 6543), Supabase provides the scalability, concurrency, and cloud accessibility required for a production-level real estate registry.
+
+**Smart Contract Deployment (Ethereum Sepolia Testnet):** The `RREBP_BrokerRegistry` smart contract is deployed to the Sepolia testnet. Sepolia mirrors the Ethereum Mainnet environment, allowing full interaction with MetaMask and Ethers.js using test ETH. This provides a functional environment for demonstration and verification without requiring real financial transactions or mainnet gas fees.
 
 ## Author
-Credo Desparvis Gutabarwa
+
+**Credo Desparvis Gutabarwa**
