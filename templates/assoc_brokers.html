@@ -6,6 +6,32 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
     type="application/javascript"></script>
 
+<style>
+    /* Modal Styling */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 3000; opacity: 0; visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-card {
+        background: white; width: 100%; max-width: 500px;
+        padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .modal-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+    .modal-desc { font-size: 0.9rem; color: #6B7280; margin-bottom: 1.5rem; }
+    .modal-textarea {
+        width: 100%; height: 120px; padding: 0.75rem; border: 1px solid #D1D5DB;
+        border-radius: 6px; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; resize: vertical;
+        margin-bottom: 1.5rem;
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; }
+    .btn-cancel { background-color: #E5E7EB; color: #374151; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .btn-confirm-suspend { background-color: #F59E0B; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+</style>
+
 <div class="admin-header">
     <h1>Brokers</h1>
 </div>
@@ -29,17 +55,11 @@
                 <td style="padding: 1rem;">{{ broker.email }}</td>
                 <td style="padding: 1rem;">
                     {% if broker.status == 'Active' %}
-                    <span
-                        style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #D1FAE5; color: #065F46;">{{
-                        broker.status }}</span>
+                    <span style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #D1FAE5; color: #065F46;">{{ broker.status }}</span>
                     {% elif broker.status == 'Suspended' %}
-                    <span
-                        style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #FEE2E2; color: #991B1B;">{{
-                        broker.status }}</span>
+                    <span style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #FEE2E2; color: #991B1B;">{{ broker.status }}</span>
                     {% else %}
-                    <span
-                        style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #FEF3C7; color: #92400E;">{{
-                        broker.status }}</span>
+                    <span style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background-color: #FEF3C7; color: #92400E;">{{ broker.status }}</span>
                     {% endif %}
                 </td>
                 <td style="padding: 1rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
@@ -60,17 +80,17 @@
                         <i class="fa-brands fa-ethereum"></i> Deploy
                     </button>
 
-                    <!-- STAGE 3: On-Chain Management (Strict Check) -->
+                    <!-- STAGE 3: On-Chain Management -->
                     {% elif broker.status == 'Active' or broker.status == 'Suspended' %}
-                    <span style="color: #059669; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem;"><i
-                            class="fa-solid fa-check"></i> On-Chain</span>
+                    <span style="color: #059669; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem;"><i class="fa-solid fa-check"></i> On-Chain</span>
 
-                    <form action="/assocdash/brokers/{{ broker.id }}/suspend" method="POST" style="margin: 0;">
-                        <button type="submit"
-                            style="background-color: #F59E0B; color: white; border: none; padding: 0.4rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
-                            {{ 'Activate' if broker.status == 'Suspended' else 'Suspend' }}
-                        </button>
-                    </form>
+                    <!-- Trigger Modal instead of instant submit for suspend/activate -->
+                    <button type="button" 
+                        onclick="openSuspendModal('{{ broker.id }}', '{{ broker.full_name }}', '{{ broker.status }}')"
+                        style="background-color: #F59E0B; color: white; border: none; padding: 0.4rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                        {{ 'Activate' if broker.status == 'Suspended' else 'Suspend' }}
+                    </button>
+
                     <form action="/assocdash/brokers/{{ broker.id }}/delete" method="POST"
                         onsubmit="return confirm('Delete this broker completely?');" style="margin: 0;">
                         <button type="submit"
@@ -79,7 +99,7 @@
                         </button>
                     </form>
 
-                    <!-- FALLBACK: Catches old database entries or typos! -->
+                    <!-- FALLBACK -->
                     {% else %}
                     <span style="color: #DC2626; font-size: 0.85rem; font-weight: bold;">
                         <i class="fa-solid fa-triangle-exclamation"></i> Stuck Status: '{{ broker.status }}'
@@ -97,8 +117,51 @@
     </table>
 </div>
 
+<!-- Suspension / Activation Reason Modal -->
+<div id="suspendModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-title" id="modalTitle">Reason for Status Change</div>
+        <div class="modal-desc" id="modalDesc">Provide a clear reason. This will be sent directly to the broker's registered email address.</div>
+        
+        <form id="suspendForm" method="POST">
+            <textarea name="suspension_reason" class="modal-textarea" placeholder="Type explanation or requirements here..." required></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeSuspendModal()">Cancel</button>
+                <button type="submit" class="btn-confirm-suspend" id="modalSubmitBtn">Confirm & Send Email</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
+    function openSuspendModal(brokerId, brokerName, currentStatus) {
+        const modal = document.getElementById('suspendModal');
+        const form = document.getElementById('suspendForm');
+        const title = document.getElementById('modalTitle');
+        const desc = document.getElementById('modalDesc');
+        const submitBtn = document.getElementById('modalSubmitBtn');
+
+        form.action = `/assocdash/brokers/${brokerId}/suspend`;
+        
+        if (currentStatus === 'Suspended') {
+            title.innerText = `Reactivate ${brokerName}?`;
+            desc.innerText = `Provide a short note explaining why their suspension is being lifted. This goes straight to their email.`;
+            submitBtn.innerText = "Reactivate & Email";
+            submitBtn.style.backgroundColor = "#10B981";
+        } else {
+            title.innerText = `Suspend ${brokerName}?`;
+            desc.innerText = `Provide a clear violation or reason. This will be emailed immediately to the broker.`;
+            submitBtn.innerText = "Suspend & Email";
+            submitBtn.style.backgroundColor = "#F59E0B";
+        }
+
+        modal.classList.add('active');
+    }
+
+    function closeSuspendModal() {
+        document.getElementById('suspendModal').classList.remove('active');
+    }
+
     async function deployBroker(brokerId, licenseNumber, orgId) {
         if (typeof window.ethereum === 'undefined') {
             showToast('Please install the MetaMask extension to deploy to the blockchain.', 'error');
@@ -114,7 +177,7 @@
 
             const dataToHash = licenseNumber + orgId;
             const brokerHash = ethers.utils.id(dataToHash);
-            const contractAddress = "0xfAF6FA9F4fFE82bE38e10E68661945383445cA7C"; // NEW Contract Address
+            const contractAddress = "0xfAF6FA9F4fFE82bE38e10E68661945383445cA7C";
             
             const abi = [
                 "function registerBroker(bytes32 _brokerHash) public",
@@ -136,7 +199,6 @@
             });
 
             if (response.ok) {
-                // If successful, reload the page. The server will flash a success message.
                 window.location.reload(); 
             }
 
@@ -144,7 +206,6 @@
             console.error("Blockchain error:", error);
             hideLoader(); 
             
-            // Human-readable errors using Toasts!
             if (error.code === 4001) {
                 showToast("Transaction rejected in MetaMask.", "warning");
             } else if (error.message && error.message.includes("Not an authorized association")) {
