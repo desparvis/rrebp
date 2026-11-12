@@ -4,6 +4,10 @@ from models import db, AssociationAdmin, Organization, Broker, Property, Review,
 from datetime import datetime, timezone
 import random
 import string
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from werkzeug.security import generate_password_hash, check_password_hash
 
 association = Blueprint('association', __name__, template_folder="templates", static_folder="static")
@@ -36,6 +40,61 @@ def log_audit_action(actor_id, action, target_type, target_id, description):
     )
     db.session.add(log)
     db.session.commit()
+
+# ==========================================
+# EMAIL HELPER
+# ==========================================
+def send_suspension_email(broker_email, broker_name, status, reason):
+    """Sends an email notification to the broker regarding their account status change."""
+    sender_email = os.getenv("MAIL_USERNAME")
+    sender_password = os.getenv("MAIL_PASSWORD")
+    
+    if not sender_email or not sender_password:
+        print("Warning: Mail credentials not found in environment. Skipping email dispatch.")
+        return
+
+    subject = f"RREBP Account Status Update: {status}"
+    
+    if status == 'Suspended':
+        body = f"""Dear {broker_name},
+
+Your RREBP broker account has been suspended by your real estate association.
+
+Reason / Details:
+{reason}
+
+If you believe this is an error, please contact your association administrator directly.
+
+Best regards,
+RREBP Administration Team"""
+    else:
+        body = f"""Dear {broker_name},
+
+Good news! Your RREBP broker account has been reactivated.
+
+Note from administration:
+{reason}
+
+You may now log back into your portal and resume operations.
+
+Best regards,
+RREBP Administration Team"""
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = broker_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, broker_email, msg.as_string())
+        server.quit()
+        print(f"Status update email successfully sent to {broker_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
 
 # ==========================================
 # AUTH & CONTEXT
@@ -165,14 +224,22 @@ def verify_broker(broker_id):
 @assoc_login_required
 def suspend_broker(broker_id):
     broker = Broker.query.get_or_404(broker_id)
-    broker.status = 'Suspended' if broker.status == 'Active' else 'Active'
+    
+    # Toggle status based on current state
+    new_status = 'Suspended' if broker.status == 'Active' else 'Active'
+    reason = request.form.get('suspension_reason', 'No specific reason provided.')
+    
+    broker.status = new_status
     db.session.commit()
     
-    # AUDIT LOG
-    action_type = 'SUSPEND_BROKER' if broker.status == 'Suspended' else 'ACTIVATE_BROKER'
-    log_audit_action(session['assoc_admin_id'], action_type, 'Broker', broker.id, f"Changed broker status to: {broker.status}")
+    # Dispatch email notification containing the reason
+    send_suspension_email(broker.email, broker.full_name, new_status, reason)
     
-    flash(f"Broker status updated to {broker.status}.", "info")
+    # AUDIT LOG
+    action_type = 'SUSPEND_BROKER' if new_status == 'Suspended' else 'ACTIVATE_BROKER'
+    log_audit_action(session['assoc_admin_id'], action_type, 'Broker', broker.id, f"Changed broker status to: {new_status}. Reason: {reason}")
+    
+    flash(f"Broker status updated to {new_status} and notification email sent.", "info")
     return redirect(url_for('association.brokers'))
 
 @association.route('/assocdash/brokers/<broker_id>/delete', methods=['POST'])
