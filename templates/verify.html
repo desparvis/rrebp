@@ -36,8 +36,46 @@
     .result-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 1.25rem;
         margin-bottom: 1.5rem;
+    }
+
+    .result-grid:last-child {
+        margin-bottom: 0;
+    }
+
+    .status-pill {
+        display: inline-block;
+        margin-top: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background-color: #ECFDF5;
+        color: #065F46;
+    }
+
+    .status-suspended {
+        background-color: #FEF2F2;
+        color: #991B1B;
+    }
+
+    .status-pending {
+        background-color: #FFFBEB;
+        color: #92400E;
+    }
+
+    .verification-banner {
+        background-color: #F9FAFB;
+        padding: 0.95rem 1rem;
+        border-radius: 6px;
+        text-align: center;
+        border: 1px solid #E5E7EB;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
     }
 
     @media (max-width: 600px) {
@@ -59,7 +97,7 @@
         }
         .result-grid {
             grid-template-columns: 1fr;
-            gap: 0.75rem;
+            gap: 0.85rem;
         }
     }
 </style>
@@ -73,7 +111,7 @@
 
         <div class="verify-box">
             <form action="{{ url_for('landing.verify') }}" method="POST" class="search-form">
-                <input type="text" name="license_number" placeholder="Enter License Number e.g., RWAREB-2026-XXX"
+                <input type="text" name="license_number" placeholder="Enter License Number e.g., RWA-2026-XXXXXXXXXX"
                     required
                     style="flex: 1; padding: 0.85rem; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 1rem;">
                 <button type="submit" class="btn-primary" style="padding: 0.85rem 1.5rem;">
@@ -83,39 +121,49 @@
         </div>
 
         {% if broker %}
+        {% set is_suspended = (broker.status | lower == 'suspended') %}
         <div class="result-box">
-            <h2 style="margin-top: 0; color: var(--text-dark);">{{ broker.full_name }}</h2>
-            <p style="color: var(--text-muted); font-size: 1.1rem; margin-top: 0;">{{ broker.professional_title }}</p>
+            <h2 style="margin-top: 0; margin-bottom: 0.25rem; color: var(--text-dark);">{{ broker.full_name }}</h2>
+            <p style="color: var(--text-muted); font-size: 1.05rem; margin-top: 0;">{{ broker.professional_title }}</p>
 
             <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 1.5rem 0;">
 
-            <div class="result-grid">
+            <div class="result-grid" {% if is_suspended %}style="margin-bottom: 0;"{% endif %}>
                 <div>
                     <strong style="display: block; color: var(--text-muted); font-size: 0.85rem;">License
                         Number</strong>
-                    <span style="color: var(--text-dark);">{{ broker.license_number }}</span>
+                    <span style="display: inline-block; margin-top: 0.3rem; color: var(--text-dark); font-weight: 500;">{{ broker.license_number }}</span>
                 </div>
                 <div>
                     <strong style="display: block; color: var(--text-muted); font-size: 0.85rem;">Status</strong>
-                    <span style="font-weight: 600; color: var(--text-dark);">{{ broker.status }}</span>
+                    <span id="broker-status-pill" class="status-pill {% if broker.status == 'Active' %}status-active{% elif is_suspended %}status-suspended{% else %}status-pending{% endif %}">
+                        {{ broker.status }}
+                    </span>
                 </div>
             </div>
 
-            <div id="blockchain-status"
-                style="background-color: #F3F4F6; padding: 1rem; border-radius: 6px; text-align: center; border: 1px solid #E5E7EB;">
-                <i class="fa-solid fa-circle-notch fa-spin"></i> Verifying...
+            {% if not is_suspended %}
+            <div id="blockchain-status" class="verification-banner">
+                <span style="color: #4B5563;"><i class="fa-solid fa-circle-notch fa-spin"></i> Checking registration...</span>
             </div>
+            {% endif %}
         </div>
 
+        {% if not is_suspended %}
         <script>
             async function verifyOnChain() {
                 const brokerHash = "{{ broker.verification_code }}";
                 const statusDiv = document.getElementById('blockchain-status');
+                const statusPill = document.getElementById('broker-status-pill');
+
+                function showPendingRegistration() {
+                    statusDiv.innerHTML = '<span style="color: #92400E; font-weight: 600;"><i class="fa-solid fa-clock"></i> Pending Registration</span>';
+                    statusDiv.style.backgroundColor = '#FFFBEB';
+                    statusDiv.style.borderColor = '#FCD34D';
+                }
 
                 if (!brokerHash || brokerHash === "None") {
-                    statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-triangle-exclamation"></i> Not Verified</span>';
-                    statusDiv.style.backgroundColor = '#FEF2F2';
-                    statusDiv.style.borderColor = '#FCA5A5';
+                    showPendingRegistration();
                     return;
                 }
 
@@ -135,28 +183,31 @@
 
                     if (registeredAt !== "0") {
                         if (isActive) {
-                            statusDiv.innerHTML = '<span style="color: #065F46; font-weight: bold;"><i class="fa-solid fa-shield-check"></i> Verified</span>';
-                            statusDiv.style.backgroundColor = '#D1FAE5';
-                            statusDiv.style.borderColor = '#34D399';
+                            statusDiv.innerHTML = '<span style="color: #065F46; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> Verified</span>';
+                            statusDiv.style.backgroundColor = '#ECFDF5';
+                            statusDiv.style.borderColor = '#6EE7B7';
                         } else {
-                            statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-xmark"></i> Suspended</span>';
-                            statusDiv.style.backgroundColor = '#FEF2F2';
-                            statusDiv.style.borderColor = '#FCA5A5';
+                            statusDiv.style.display = 'none';
+                            if (statusPill) {
+                                statusPill.textContent = 'Suspended';
+                                statusPill.className = 'status-pill status-suspended';
+                            }
                         }
                     } else {
-                        statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-xmark"></i> Not Verified</span>';
-                        statusDiv.style.backgroundColor = '#FEF2F2';
-                        statusDiv.style.borderColor = '#FCA5A5';
+                        showPendingRegistration();
                     }
 
                 } catch (error) {
                     console.error("Verification Error:", error);
-                    statusDiv.innerHTML = '<span style="color: #92400E;"><i class="fa-solid fa-wifi"></i> Could not complete verification check.</span>';
+                    statusDiv.innerHTML = '<span style="color: #6B7280;"><i class="fa-solid fa-circle-exclamation"></i> Status check temporarily unavailable</span>';
+                    statusDiv.style.backgroundColor = '#F9FAFB';
+                    statusDiv.style.borderColor = '#E5E7EB';
                 }
             }
 
             verifyOnChain();
         </script>
+        {% endif %}
         {% endif %}
 
     </div>
