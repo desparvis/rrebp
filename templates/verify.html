@@ -131,7 +131,7 @@
                         "function brokers(bytes32) public view returns (bytes32 brokerHash, address associationWallet, bool isActive, uint256 registeredAt)"
                     ];
 
-                    // Initialize Public Provider (No Wallet Required)
+                    // Initialize Public Provider 
                     const rpcUrl = "https://ethereum-sepolia-rpc.publicnode.com";
                     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
                     const contract = new ethers.Contract(contractAddress, abi, provider);
