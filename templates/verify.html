@@ -69,12 +69,9 @@
 
         <h1 style="text-align: center; color: var(--text-dark); font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">
             Verify a Broker</h1>
-        <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Enter a license number to verify
-            their authorization on the blockchain.</p>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Enter a license number to check a broker's registration status.</p>
 
-        <!-- Search Box -->
         <div class="verify-box">
-            <!-- (Old flash messages removed because base.html handles toasts now!) -->
             <form action="{{ url_for('landing.verify') }}" method="POST" class="search-form">
                 <input type="text" name="license_number" placeholder="Enter License Number e.g., RWAREB-2026-XXX"
                     required
@@ -85,7 +82,6 @@
             </form>
         </div>
 
-        <!-- Result Card -->
         {% if broker %}
         <div class="result-box">
             <h2 style="margin-top: 0; color: var(--text-dark);">{{ broker.full_name }}</h2>
@@ -105,10 +101,9 @@
                 </div>
             </div>
 
-            <!-- Blockchain Status UI -->
             <div id="blockchain-status"
                 style="background-color: #F3F4F6; padding: 1rem; border-radius: 6px; text-align: center; border: 1px solid #E5E7EB;">
-                <i class="fa-solid fa-circle-notch fa-spin"></i> Checking Blockchain...
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Verifying...
             </div>
         </div>
 
@@ -118,49 +113,45 @@
                 const statusDiv = document.getElementById('blockchain-status');
 
                 if (!brokerHash || brokerHash === "None") {
-                    statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-triangle-exclamation"></i> Not registered on blockchain</span>';
+                    statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-triangle-exclamation"></i> Not Verified</span>';
                     statusDiv.style.backgroundColor = '#FEF2F2';
                     statusDiv.style.borderColor = '#FCA5A5';
                     return;
                 }
 
                 try {
-                    // Contract Configuration
                     const contractAddress = "0xfAF6FA9F4fFE82bE38e10E68661945383445cA7C";
                     const abi = [
                         "function brokers(bytes32) public view returns (bytes32 brokerHash, address associationWallet, bool isActive, uint256 registeredAt)"
                     ];
 
-                    // Initialize Public Provider 
                     const rpcUrl = "https://ethereum-sepolia-rpc.publicnode.com";
                     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
                     const contract = new ethers.Contract(contractAddress, abi, provider);
 
-                    // Execute Blockchain Query
                     const brokerData = await contract.brokers(brokerHash);
                     const isActive = brokerData.isActive;
                     const registeredAt = brokerData.registeredAt.toString();
 
-                    // Evaluate Response
                     if (registeredAt !== "0") {
                         if (isActive) {
-                            statusDiv.innerHTML = '<span style="color: #065F46; font-weight: bold;"><i class="fa-solid fa-shield-check"></i> Verified Authentic on Blockchain</span><br><span style="font-size: 0.75rem; color: #6B7280; font-family: monospace; word-break: break-all;">Hash: ' + brokerHash + '</span>';
+                            statusDiv.innerHTML = '<span style="color: #065F46; font-weight: bold;"><i class="fa-solid fa-shield-check"></i> Verified</span>';
                             statusDiv.style.backgroundColor = '#D1FAE5';
                             statusDiv.style.borderColor = '#34D399';
                         } else {
-                            statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-xmark"></i> Blockchain Verification Failed (Suspended)</span>';
+                            statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-xmark"></i> Suspended</span>';
                             statusDiv.style.backgroundColor = '#FEF2F2';
                             statusDiv.style.borderColor = '#FCA5A5';
                         }
                     } else {
-                        statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-xmark"></i> Not found on Blockchain</span>';
+                        statusDiv.innerHTML = '<span style="color: #991B1B;"><i class="fa-solid fa-xmark"></i> Not Verified</span>';
                         statusDiv.style.backgroundColor = '#FEF2F2';
                         statusDiv.style.borderColor = '#FCA5A5';
                     }
 
                 } catch (error) {
                     console.error("Verification Error:", error);
-                    statusDiv.innerHTML = '<span style="color: #92400E;"><i class="fa-solid fa-wifi"></i> Could not connect to the blockchain network.</span>';
+                    statusDiv.innerHTML = '<span style="color: #92400E;"><i class="fa-solid fa-wifi"></i> Could not complete verification check.</span>';
                 }
             }
 
