@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy | RREBP{% endblock %}
+
+{% block content %}
+<style>
+    .privacy-wrapper {
+        background-color: var(--hover-grey);
+        min-height: 70vh;
+        padding: 4rem 1rem;
+    }
+
+    .privacy-card {
+        max-width: 850px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 3rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-top: 4px solid var(--btn-blue);
+        color: var(--text-dark);
+        line-height: 1.7;
+    }
+
+    .privacy-card h1 {
+        font-family: 'Playfair Display', serif;
+        margin-top: 0;
+        margin-bottom: 0.35rem;
+        font-size: 2rem;
+        color: var(--text-dark);
+    }
+
+    .effective-date {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-top: 0;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .privacy-card h2 {
+        font-size: 1.25rem;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-dark);
+    }
+
+    .privacy-card h3 {
+        font-size: 1.05rem;
+        margin-top: 1.25rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-dark);
+    }
+
+    .privacy-card p {
+        margin-top: 0;
+        margin-bottom: 1rem;
+    }
+
+    .privacy-card ul {
+        margin-top: 0;
+        margin-bottom: 1.25rem;
+        padding-left: 1.5rem;
+    }
+
+    .privacy-card li {
+        margin-bottom: 0.4rem;
+    }
+
+    @media (max-width: 600px) {
+        .privacy-wrapper {
+            padding: 2rem 1rem;
+        }
+        .privacy-card {
+            padding: 1.75rem 1.25rem;
+        }
+        .privacy-card h1 {
+            font-size: 1.6rem;
+        }
+    }
+</style>
+
+<div class="privacy-wrapper">
+    <div class="privacy-card">
+        <h1>RREBP PRIVACY POLICY</h1>
+        <p class="effective-date">Effective date: 21 November 2026</p>
+
+        <h2>1. Introduction</h2>
+        <p>The Rwanda Real Estate Brokers Platform (RREBP) is a web application designed to help users verify real estate brokers, view approved property listings and access broker reviews. The platform also enables authorized real estate associations to register and manage brokers.</p>
+        <p>This Privacy Policy explains what information RREBP collects, why it is used, how it is stored and what users should understand about its handling.</p>
+
+        <h2>2. Information We Collect</h2>
+        <p>RREBP processes different categories of information depending on how someone uses the platform.</p>
+
+        <h3>Broker information</h3>
+        <p>When brokers register or manage their accounts, the platform stores information such as:</p>
+        <ul>
+            <li>Full name, phone number and email address.</li>
+            <li>Professional title and licence number.</li>
+            <li>Profile photograph and biography.</li>
+            <li>Work location, including province and district.</li>
+            <li>Property listing information, including descriptions, prices, addresses and images.</li>
+        </ul>
+
+        <h3>Association administrator information</h3>
+        <p>The platform stores information required to manage association accounts, including:</p>
+        <ul>
+            <li>Full name and email address.</li>
+            <li>Password hash used for authentication.</li>
+            <li>Association affiliation and account status.</li>
+            <li>Connected blockchain wallet address.</li>
+        </ul>
+
+        <h3>Public user and review information</h3>
+        <p>Members of the public can browse broker information and approved property listings without creating a platform account. When submitting a review, the review record includes a client name, rating and comment. Reviews are subject to association moderation before approval for public display.</p>
+
+        <h3>Technical and administrative records</h3>
+        <p>RREBP also stores records needed to operate and manage the platform, including account identifiers, verification information, administrative activity logs and blockchain-related records.</p>
+
+        <h2>3. How We Use Information</h2>
+        <p>RREBP uses collected information for the following purposes:</p>
+        <ul>
+            <li>Registering brokers and managing association administrator accounts.</li>
+            <li>Supporting broker verification and displaying verification status.</li>
+            <li>Allowing brokers to manage their professional profiles and property listings.</li>
+            <li>Enabling the public to search for brokers and view approved listings.</li>
+            <li>Receiving and moderating broker reviews.</li>
+            <li>Sending relevant account and status notifications by email.</li>
+            <li>Maintaining records of important administrative activities.</li>
+            <li>Supporting the platform's blockchain-based broker verification process.</li>
+        </ul>
+        <p>RREBP does not need public users to create accounts simply to browse broker information and property listings.</p>
+
+        <h2>4. Publicly Visible Information</h2>
+        <p>Certain information is made available through the public-facing parts of RREBP to support transparency and broker verification.</p>
+        <p>This may include selected broker profile details, professional information, verification status, approved property listings and approved reviews.</p>
+        <p>Association administrator account information, including password hashes, is intended for administrative use and is not displayed as public broker information.</p>
+        <p>Users should understand that information submitted for public display may be viewed by other platform visitors.</p>
+
+        <h2>5. How We Protect Information</h2>
+        <p>RREBP uses several technical and administrative safeguards:</p>
+        <ul>
+            <li>Passwords are stored using Werkzeug password hashing rather than as readable passwords.</li>
+            <li>Login sessions and protected application routes are used to restrict access to account functions.</li>
+            <li>Different account roles support separation between Super Admins, Association Admins and Brokers.</li>
+            <li>Administrative activities are recorded through the AuditLog system.</li>
+            <li>Property and profile images are stored and delivered through Cloudinary.</li>
+            <li>The application uses a Supabase-hosted PostgreSQL database for its records.</li>
+        </ul>
+        <p>These safeguards help protect information, but no online system can guarantee complete security. Access-control checks and data-protection procedures may require further improvement as the platform develops.</p>
+
+        <h2>6. Blockchain Information</h2>
+        <p>RREBP uses the Ethereum Sepolia test network to support broker verification. The application generates a broker hash using the broker's licence number and internal organization identifier. An authorized association wallet submits this hash to the smart contract.</p>
+        <p>The blockchain may publicly record broker hashes, association wallet addresses, registration timestamps and broker status changes. The platform does not intentionally place a broker's full name, phone number, email address or password directly into the smart contract.</p>
+        <p>Blockchain records are designed to be tamper-evident and may not be editable or removable through the application. A user should therefore understand that deleting an application account does not necessarily remove information already recorded on the blockchain.</p>
+
+        <h2>7. Third-Party Services</h2>
+        <p>RREBP uses external services and software to operate:</p>
+        <ul>
+            <li>Supabase: provides the hosted PostgreSQL database service.</li>
+            <li>Cloudinary: stores and delivers uploaded profile and property images.</li>
+            <li>Email service: supports account and status notifications.</li>
+            <li>MetaMask: allows association administrators to connect their wallets to the blockchain.</li>
+            <li>Ethereum Sepolia: provides the test network on which broker verification transactions are recorded.</li>
+        </ul>
+        <p>These providers operate under their own applicable terms and privacy practices. Information processed through these services may therefore be subject to their respective policies.</p>
+
+        <h2>8. Account Management and Deletion</h2>
+        <p>Brokers and association administrators have account settings that allow them to update profile information and change passwords. The application also provides account-deletion functionality.</p>
+        <p>Brokers can manage and delete their own property listings, including functionality to remove associated images from Cloudinary.</p>
+        <p>However, account deletion does not currently guarantee that every related record or external file is erased. For example, audit records may remain for accountability, and a broker's profile image may remain in Cloudinary after account deletion. Blockchain records are also not automatically removed when an application account is deleted.</p>
+        <p>Users who have questions about their information or wish to request correction or deletion should contact the platform administrator using the contact details provided below.</p>
+
+        <h2>9. Data Retention</h2>
+        <p>RREBP retains information to support account management, broker verification, property listings, review moderation and administrative accountability.</p>
+        <p>The current implementation does not establish a complete fixed retention schedule covering all database records, uploaded media, audit logs and blockchain records. Some records may therefore remain after an account is deleted, depending on how and where they were stored.</p>
+        <p>A more comprehensive retention and deletion procedure is an area for future improvement.</p>
+
+        <h2>10. User Privacy Rights</h2>
+        <p>Users may contact the platform administrator to ask about personal information held by RREBP or to request access, correction or deletion where applicable.</p>
+        <p>Requests will need to be considered in light of the platform's operational requirements, applicable legal obligations, retained audit records and the technical limitations of blockchain storage.</p>
+
+        <h2>11. Changes to This Policy</h2>
+        <p>This Privacy Policy may be updated as RREBP develops, particularly when new features, data-processing activities or third-party services are introduced. Users should consult the policy for the latest information about how the platform handles personal data.</p>
+
+        <h2>12. Contact Information</h2>
+        <p>For questions about this Privacy Policy or the handling of personal information, contact:</p>
+        <p style="margin-bottom: 0;">
+            Rwanda Real Estate Brokers Platform (RREBP)<br>
+            Platform administrator email: [Insert the actual project contact email]<br>
+            Institution: African Leadership University, Rwanda
+        </p>
+    </div>
+</div>
+{% endblock %}

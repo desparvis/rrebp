@@ -492,3 +492,10 @@ def reset_password(token):
             return redirect(url_for('landing.login_portal'))
             
     return render_template('public_reset_password.html', token=token)
+
+
+# Privacy policy
+
+@landing.route('/privacy')
+def privacy():
+    return render_template("privacy.html")

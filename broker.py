@@ -323,7 +323,7 @@ def settings():
             return redirect(url_for('broker.settings'))
 
         # ==========================================
-        # 3. NUKE ACCOUNT
+        # 3. DELETE ACCOUNT
         # ==========================================
         elif action == 'delete_account':
             db.session.delete(broker)
