@@ -227,7 +227,7 @@ def audit_logs():
             start_dt = datetime.strptime(start_datetime, '%Y-%m-%dT%H:%M')
             query = query.filter(AuditLog.timestamp >= start_dt)
         except ValueError:
-            pass # Ignore malformed dates
+            pass  # Ignore malformed dates
 
     if end_datetime:
         try:
@@ -239,7 +239,7 @@ def audit_logs():
     # 3. Apply Actor and Action filtering
     if actor_type:
         query = query.filter_by(actor_type=actor_type)
-        
+
     if action_type:
         # Using .contains() so searching "APPROVE" catches "APPROVE_BROKER" and "APPROVE_PROPERTY"
         query = query.filter(AuditLog.action.contains(action_type))
@@ -247,5 +247,25 @@ def audit_logs():
     # 4. Execute the query, newest first
     # We limit to 500 here to prevent server crashing on massive datasets (we'll add pagination later)
     logs = query.order_by(AuditLog.timestamp.desc()).limit(500).all()
-    
-    return render_template("sp_audit_logs.html", logs=logs)
+
+    # 5. Resolve actor IDs to email & name for clearer auditing
+    super_admin_ids = {str(log.actor_id) for log in logs if log.actor_type == 'SuperAdmin' and log.actor_id}
+    assoc_admin_ids = {str(log.actor_id) for log in logs if log.actor_type == 'AssociationAdmin' and log.actor_id}
+
+    actor_lookup = {}
+
+    if super_admin_ids:
+        for admin in SuperAdmin.query.filter(SuperAdmin.id.in_(super_admin_ids)).all():
+            actor_lookup[('SuperAdmin', str(admin.id))] = {
+                'email': admin.email,
+                'name': admin.full_name if hasattr(admin, 'full_name') and admin.full_name else 'Super Admin'
+            }
+
+    if assoc_admin_ids:
+        for admin in AssociationAdmin.query.filter(AssociationAdmin.id.in_(assoc_admin_ids)).all():
+            actor_lookup[('AssociationAdmin', str(admin.id))] = {
+                'email': admin.email,
+                'name': admin.full_name if hasattr(admin, 'full_name') and admin.full_name else 'Association Admin'
+            }
+
+    return render_template("sp_audit_logs.html", logs=logs, actor_lookup=actor_lookup)
