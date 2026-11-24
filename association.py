@@ -158,8 +158,33 @@ def inject_admin_and_counts():
 @assoc_login_required
 def dashboard():
     admin = AssociationAdmin.query.get(session['assoc_admin_id'])
-    total_brokers = Broker.query.filter_by(organization_id=admin.organization_id).count()
-    return render_template("assoc_dashboard.html", admin=admin, total_brokers=total_brokers)
+    org_id = admin.organization_id
+
+    total_brokers = Broker.query.filter_by(organization_id=org_id).count()
+    active_brokers = Broker.query.filter_by(organization_id=org_id, status='Active').count()
+
+    org_broker_ids = [b.id for b in Broker.query.filter_by(organization_id=org_id).all()]
+
+    verified_properties = 0
+    pending_reviews = 0
+    if org_broker_ids:
+        verified_properties = Property.query.filter(
+            Property.broker_id.in_(org_broker_ids),
+            Property.verification_status == 'Verified'
+        ).count()
+        pending_reviews = Review.query.filter(
+            Review.broker_id.in_(org_broker_ids),
+            Review.is_approved.is_(False)
+        ).count()
+
+    return render_template(
+        "assoc_dashboard.html",
+        admin=admin,
+        total_brokers=total_brokers,
+        active_brokers=active_brokers,
+        verified_properties=verified_properties,
+        pending_reviews=pending_reviews
+    )
 
 @association.route('/assocdash/logout')
 def logout():

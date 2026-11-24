@@ -14,11 +14,28 @@
             <p>{{ total_brokers }}</p>
         </div>
     </div>
+
     <div class="metric-card">
-        <div class="metric-icon" style="color: #059669; background-color: #D1FAE5;"><i class="fa-solid fa-link"></i></div>
+        <div class="metric-icon" style="color: #059669; background-color: #D1FAE5;"><i class="fa-solid fa-user-check"></i></div>
         <div class="metric-data">
-            <h3>Verified on Blockchain</h3>
-            <p>0</p> <!-- We will connect this next -->
+            <h3>Active Brokers</h3>
+            <p>{{ active_brokers }}</p>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon" style="color: #1D4ED8; background-color: #DBEAFE;"><i class="fa-solid fa-building-circle-check"></i></div>
+        <div class="metric-data">
+            <h3>Verified Properties</h3>
+            <p>{{ verified_properties }}</p>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon" style="color: #B45309; background-color: #FEF3C7;"><i class="fa-solid fa-comments"></i></div>
+        <div class="metric-data">
+            <h3>Pending Reviews</h3>
+            <p>{{ pending_reviews }}</p>
         </div>
     </div>
 </div>
