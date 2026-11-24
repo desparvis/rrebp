@@ -31,15 +31,20 @@ def home():
 @landing.route('/verify', methods=['GET', 'POST'])
 def verify():
     broker = None
-    if request.method == 'POST':
-        license_number = request.form.get('license_number')
+    org_name = None
 
+    if request.method == 'POST':
+        license_number = request.form.get('license_number', '').strip()
         broker = Broker.query.filter_by(license_number=license_number).first()
-        
-        if not broker:
+
+        if broker and broker.organization_id:
+            org = Organization.query.get(broker.organization_id)
+            if org:
+                org_name = org.name
+        elif not broker:
             flash("No broker found matching this license number.", "error")
-            
-    return render_template("verify.html", broker=broker)
+
+    return render_template("verify.html", broker=broker, org_name=org_name)
 
 # Login route
 @landing.route('/login', methods=['GET', 'POST'])
